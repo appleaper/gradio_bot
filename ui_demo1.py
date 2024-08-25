@@ -3,6 +3,7 @@ from chat_api.qwen.qwen_response import qwen_chat
 from chat_api.baidu.baidu_api import baidu_chat
 from local.local_api import local_chat
 from video.video_play import load_local_video
+from ocr.ocr_show import show_result
 
 default_system = 'You are a helpful assistant.'
 qwen_dict = {
@@ -76,6 +77,13 @@ with gr.Blocks() as demo:
             # 使用按钮触发加载本地视频文件
             load_button = gr.Button("Load Local Video")
             load_button.click(load_local_video, inputs=None, outputs=video_output)
+
+        with gr.TabItem('ocr check'):
+            with gr.Row():
+                img_input = gr.Image(type='filepath', label='Image')
+                img_output = gr.Image()
+                ocr_text = gr.Textbox(lines=20, max_lines=50, label='ocr_ouput', interactive=True, show_copy_button=True, container=True)
+            img_input.upload(show_result, inputs=img_input, outputs=[img_input, img_output, ocr_text])
 
         with gr.TabItem("阿里"):
             room_set(qwen_dict, qwen_chat)
