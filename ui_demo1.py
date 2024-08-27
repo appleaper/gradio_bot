@@ -6,11 +6,11 @@ from video.video_play import load_local_video, mark_video_like
 from ocr.ocr_show import show_result
 from config import conf_yaml
 
-default_system = conf_yaml['ui_config']['default_system']
+default_system = conf_yaml['ui_conf']['default_system']
 qwen_dict = conf_yaml['qwen_api_chat']
 qianfan_dict = conf_yaml['baidu_api_chat']
-local_dict = conf_yaml['local_chat']
-rag_list = conf_yaml['rag_info_name']
+local_dict = conf_yaml['local_chat']['model_dict']
+rag_list = conf_yaml['rag']['rag_info_name']
 
 def clear_session():
     return '', [], []

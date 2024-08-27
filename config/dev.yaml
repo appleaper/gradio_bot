@@ -19,11 +19,12 @@ baidu_api_chat:
     - yi_34b_chat
 
 local_chat:
-  qwen:
-    - 1.5B
-    - 7B
-  llama3:
-    - 8B
+  model_dict:
+    qwen:
+      - 1.5B
+      - 7B
+    llama3:
+      - 8B
   name2path:
     qwen-1.5B: /home/pandas/snap/model/QwenQwen2-1.5B-Instruct
     qwen-7B: /home/pandas/snap/model/QwenQwen2-7B-Instruct-AWQ
@@ -31,11 +32,20 @@ local_chat:
   max_history_len: 6
   max_output_len: 512
 
-rag_info_name:
-  - 决策的艺术
+
+
+rag:
+  max_rag_len: 3000
+  rag_info_name:
+    - 决策的艺术
+  decision:
+    database_name: '/home/pandas/snap/code/RapidOcr/database_data/data/decision_making'
+    table_name: 'decision'
+    model_path: '/home/pandas/snap/model/Dmeta-embedding-zh'
+    top_k: 3
 
 ui_conf:
-  default_system: You are a helpful assistant.
+  default_system: 'You are a helpful assistant.'
 
 video:
   root_dir: '/media/pandas/DataHaven1/video'
