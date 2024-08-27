@@ -2,15 +2,11 @@ import hashlib
 import functools
 from local.qwen.qwen_api import qwen_model_init,qwen_model_detect
 from local.llama3.llama3_api import llama3_model_init, llama3_model_detect
+from config import conf_yaml
 
-name2path = {
-    'qwen-1.5B':'/home/pandas/snap/model/QwenQwen2-1.5B-Instruct',
-    'qwen-7B':'/home/pandas/snap/model/QwenQwen2-7B-Instruct-AWQ',
-    'llama3-8b':'/home/pandas/snap/model/Llama3-8B-Chinese-Chat',
-}
-
+name2path = conf_yaml['local_chat']['name2path']
+max_history_len = conf_yaml['local_chat']['max_history_len']
 def load_model(model_name):
-
     if model_name == 'qwen-1.5B':
         model, tokenizer = qwen_model_init(name2path['qwen-1.5B'])
     elif model_name == 'qwen-7B':
@@ -40,13 +36,21 @@ def cached_model_loader(func):
 @cached_model_loader
 def load_model_cached(model_name):
     return load_model(model_name)
-def local_chat(textbox, show_history, system_state, history, model_type, parm_b, steam_check_box):
+
+def add_rag_info(textbox, book_type):
+    if book_type == None:
+        return textbox
+    else:
+
+
+def local_chat(textbox, show_history, system_state, history, model_type, parm_b, steam_check_box, book_type):
+
     if show_history is None:
         history = []
     if len(history) == 0:
         history = [{"role":"system","content":system_state}]
-    elif len(history) >= 6:
-        history = history[-6:]
+    elif len(history) >= max_history_len:
+        history = history[-max_history_len:]
         history[0] = {"role": "system", "content": system_state}
     else:
         history[0] = {"role":"system","content":system_state}

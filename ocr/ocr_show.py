@@ -1,7 +1,8 @@
 from PIL import Image, ImageDraw, ImageFont
 from rapidocr_onnxruntime import RapidOCR
+from config import conf_yaml
 
-font_path = '/home/pandas/snap/code/RapidOcr/ocr/font/SimHei.ttf'
+font_path = conf_yaml['ocr']['font_path']
 engine = RapidOCR()
 def ocr_detect(img_path):
     result, elapse = engine(img_path)

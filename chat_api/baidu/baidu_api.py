@@ -27,7 +27,7 @@ def baidu_api(history=[], role_set='', model_name='ernie_speed'):
     response_role = 'assistant'
     return response_str, response_role
 
-def baidu_chat(textbox, show_history, system_state, history, model_type, model_name, steam_check_box):
+def baidu_chat(textbox, show_history, system_state, history, model_type, model_name, steam_check_box, book_type):
     if show_history is None:
         history = []
     if len(history) >= 6:

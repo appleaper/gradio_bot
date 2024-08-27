@@ -2,26 +2,15 @@ import gradio as gr
 from chat_api.qwen.qwen_response import qwen_chat
 from chat_api.baidu.baidu_api import baidu_chat
 from local.local_api import local_chat
-from video.video_play import load_local_video
+from video.video_play import load_local_video, mark_video_like
 from ocr.ocr_show import show_result
+from config import conf_yaml
 
-default_system = 'You are a helpful assistant.'
-qwen_dict = {
-    "qwen2": ["1.5b-instruct", "0.5b-instruct"],
-    "qwen1.5": ["1.8b-chat", "0.5b-chat"],
-}
-
-qianfan_dict = {
-    'ernie-speed': ['ernie_speed', 'ernie-speed-128k'],
-    'ernie-lite': ['eb-instant', 'ernie-lite-8k'],
-    'ernie-tiny':['ernie-tiny-8k'],
-    'other':['yi_34b_chat']
-}
-
-local_dict = {
-    'qwen':['1.5B', '7B'],
-    'llama3':['8b']
-}
+default_system = conf_yaml['ui_config']['default_system']
+qwen_dict = conf_yaml['qwen_api_chat']
+qianfan_dict = conf_yaml['baidu_api_chat']
+local_dict = conf_yaml['local_chat']
+rag_list = conf_yaml['rag_info_name']
 
 def clear_session():
     return '', [], []
@@ -48,18 +37,22 @@ def room_set(model_dict, model_chat):
         system_state = gr.Textbox(value=default_system, visible=False)
 
     chatbot = gr.Chatbot(label='qwen2')
-    textbox = gr.Textbox(lines=1, label='输入')
+    with gr.Row():
+        with gr.Column(scale=1):
+            book_type = gr.Dropdown(rag_list, label="上下文知识")
+        with gr.Column(scale=4):
+            textbox = gr.Textbox(lines=1, label='输入')
 
     with gr.Row():
         clear_history = gr.Button("🧹 清除历史")
         sumbit = gr.Button("🚀 发送")
 
     textbox.submit(model_chat,
-                   inputs=[textbox, chatbot, system_input, history_state, model_type, model_name, steam_check_box],
+                   inputs=[textbox, chatbot, system_input, history_state, model_type, model_name, steam_check_box, book_type],
                    outputs=[textbox, chatbot, history_state])
 
     sumbit.click(model_chat,
-                 inputs=[textbox, chatbot, system_input, history_state, model_type, model_name, steam_check_box],
+                 inputs=[textbox, chatbot, system_input, history_state, model_type, model_name, steam_check_box, book_type],
                  outputs=[textbox, chatbot, history_state])
 
     clear_history.click(fn=clear_session,
@@ -68,15 +61,26 @@ def room_set(model_dict, model_chat):
 
 with gr.Blocks() as demo:
     with gr.Tabs():
-        with gr.TabItem("本地"):
-            room_set(local_dict, local_chat)
+        with gr.TabItem("聊天机器人"):
+            with gr.TabItem("本地"):
+                room_set(local_dict, local_chat)
+            with gr.TabItem("阿里"):
+                room_set(qwen_dict, qwen_chat)
+            with gr.TabItem("百度"):
+                room_set(qianfan_dict, baidu_chat)
 
         with gr.TabItem("本地视频播放"):
             gr.Markdown("# Local Video Player")
             video_output = gr.Video(label="Play Local Video")
+            video_path = gr.Textbox(visible=False)
             # 使用按钮触发加载本地视频文件
             load_button = gr.Button("Load Local Video")
-            load_button.click(load_local_video, inputs=None, outputs=video_output)
+            load_button.click(load_local_video, inputs=None, outputs=[video_output, video_path])
+            start_radio = gr.Radio(["1分", "2分", "3分", "4分", '5分'], label='评分')
+            high_heel = gr.CheckboxGroup(["高根", '丝袜'], label="")
+            describe_text = gr.Textbox()
+            describe_button = gr.Button('提交')
+            describe_button.click(mark_video_like, inputs=[start_radio,high_heel,describe_text,video_path], outputs=None)
 
         with gr.TabItem('ocr check'):
             with gr.Row():
@@ -85,10 +89,6 @@ with gr.Blocks() as demo:
                 ocr_text = gr.Textbox(lines=20, max_lines=50, label='ocr_ouput', interactive=True, show_copy_button=True, container=True)
             img_input.upload(show_result, inputs=img_input, outputs=[img_input, img_output, ocr_text])
 
-        with gr.TabItem("阿里"):
-            room_set(qwen_dict, qwen_chat)
 
-        with gr.TabItem("百度"):
-            room_set(qianfan_dict, baidu_chat)
 
 demo.launch(server_name='0.0.0.0')

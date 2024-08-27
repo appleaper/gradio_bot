@@ -1,7 +1,7 @@
 from openai import OpenAI
 
 
-def qwen_chat(textbox, show_history, system_state, history, model_type, model_name, steam_check_box):
+def qwen_chat(textbox, show_history, system_state, history, model_type, model_name, steam_check_box, book_type):
     client = OpenAI(
         api_key="sk-96887b78af644ddf8ddcd831bfca13f0",
         base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"

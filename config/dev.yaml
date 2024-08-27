@@ -1,0 +1,44 @@
+qwen_api_chat:
+  qwen2:
+    - 1.5b-instruct
+    - 0.5b-instruct
+  qwen1.5:
+    - 1.8b-chat
+    - 0.5b-chat
+
+baidu_api_chat:
+  ernie-speed:
+    - ernie_speed
+    - ernie-speed-128k
+  ernie-lite:
+    - eb-instant
+    - ernie-lite-8k
+  ernie-tiny:
+    - ernie-tiny-8k
+  other:
+    - yi_34b_chat
+
+local_chat:
+  qwen:
+    - 1.5B
+    - 7B
+  llama3:
+    - 8B
+  name2path:
+    qwen-1.5B: /home/pandas/snap/model/QwenQwen2-1.5B-Instruct
+    qwen-7B: /home/pandas/snap/model/QwenQwen2-7B-Instruct-AWQ
+    llama3-8b: /home/pandas/snap/model/Llama3-8B-Chinese-Chat
+  max_history_len: 6
+  max_output_len: 512
+
+rag_info_name:
+  - 决策的艺术
+
+ui_conf:
+  default_system: You are a helpful assistant.
+
+video:
+  root_dir: '/media/pandas/DataHaven1/video'
+
+ocr:
+  font_path: '/home/pandas/snap/code/RapidOcr/ocr/font/SimHei.ttf'

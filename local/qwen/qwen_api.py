@@ -1,5 +1,8 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from config import conf_yaml
+
+max_output_len = conf_yaml['local_chat']['max_output_len']
 
 if torch.cuda.is_available():
     device = "cuda"  # the device to load the model onto
@@ -25,7 +28,7 @@ def qwen_model_detect(messages, model, tokenizer):
 
     generated_ids = model.generate(
         model_inputs.input_ids,
-        max_new_tokens=512
+        max_new_tokens=max_output_len
     )
     generated_ids = [
         output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
