@@ -49,6 +49,7 @@ ui_conf:
 
 video:
   root_dir: '/media/pandas/DataHaven1/video'
+  mark_csv_path: '/home/pandas/snap/code/RapidOcr/database_data/data/adult_video/movie_mark.csv'
 
 ocr:
   font_path: '/home/pandas/snap/code/RapidOcr/ocr/font/SimHei.ttf'

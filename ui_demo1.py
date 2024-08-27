@@ -75,12 +75,13 @@ with gr.Blocks() as demo:
             video_path = gr.Textbox(visible=False)
             # 使用按钮触发加载本地视频文件
             load_button = gr.Button("Load Local Video")
-            load_button.click(load_local_video, inputs=None, outputs=[video_output, video_path])
+
             start_radio = gr.Radio(["1分", "2分", "3分", "4分", '5分'], label='评分')
-            high_heel = gr.CheckboxGroup(["高根", '丝袜'], label="")
-            describe_text = gr.Textbox()
+            type_check_boxs = gr.CheckboxGroup(["高根", '丝袜'], label="")
+            describe_text = gr.Textbox(interactive=True)
             describe_button = gr.Button('提交')
-            describe_button.click(mark_video_like, inputs=[start_radio,high_heel,describe_text,video_path], outputs=None)
+            load_button.click(load_local_video, inputs=None, outputs=[video_output, video_path, start_radio, type_check_boxs, describe_text])
+            describe_button.click(mark_video_like, inputs=[start_radio, type_check_boxs, describe_text, video_path], outputs=None)
 
         with gr.TabItem('ocr check'):
             with gr.Row():

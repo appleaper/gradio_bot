@@ -1,9 +1,12 @@
 import os
 import random
+
+import gradio as gr
 import pandas as pd
 from config import conf_yaml
 
 root_dir = conf_yaml['video']['root_dir']
+video_csv_path = conf_yaml['video']['mark_csv_path']
 def get_all_mp4_files(folder_paths):
     mp4_files = []
     for folder_path in folder_paths:
@@ -28,13 +31,24 @@ def get_random_mp4_file(folder_paths):
 def load_local_video():
     folder_paths = [root_dir]  # 替换为你的文件夹路径列表
     random_mp4_file = get_random_mp4_file(folder_paths)
-    # random_mp4_file = '/media/pandas/DataHaven1/video/luxu/好看/乱伦秀.mp4'
-    return random_mp4_file, random_mp4_file
+    df = pd.read_csv(video_csv_path)
+    select_df = df[df['filename'] == random_mp4_file]
+    if len(select_df) !=0:
+        start_radio = select_df.iloc[0]['score']
+        type_check_boxs = []
+        if select_df.iloc[0]['high_heel']:
+            type_check_boxs.append('高根')
+        if select_df.iloc[0]['silk_stockings']:
+            type_check_boxs.append('丝袜')
+        describe = select_df.iloc[0]['describe']
+    else:
+        start_radio, type_check_boxs, describe = '', [], ''
+
+    return random_mp4_file, random_mp4_file, start_radio, type_check_boxs, describe
 
 def mark_video_like(mark_score, high_heel, describe_text, video_path):
-    csv_path = './video/video_mark.csv'
-    if os.path.exists(csv_path):
-        df = pd.read_csv(csv_path)
+    if os.path.exists(video_csv_path):
+        df = pd.read_csv(video_csv_path)
     else:
         df = pd.DataFrame({'filename':[], 'score':[], 'high_heel':[], 'silk_stockings':[],'describe':[]})
 
@@ -63,7 +77,8 @@ def mark_video_like(mark_score, high_heel, describe_text, video_path):
                 'describe':describe_text}
         ])
         df = pd.concat([df, new_row], ignore_index=True)
-    df.to_csv(csv_path, index=False, encoding='utf8')
+    df.to_csv(video_csv_path, index=False, encoding='utf8')
+    gr.Info('success', duration=1)
 
 if __name__ == '__main__':
     load_local_video()

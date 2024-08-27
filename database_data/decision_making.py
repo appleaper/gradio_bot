@@ -1,7 +1,7 @@
 import pandas as pd
 from tqdm import tqdm
 from database_data.emb_model.init_model import model_detect,init_model
-from learning.chromadb_learn.lancedb_base_operations import create_table, connect_database
+from database_data.lancedb_base_operations import create_table, connect_database
 from config import conf_yaml
 def embbing_text(model_path, df):
     model, tokenizer = init_model(model_path)
