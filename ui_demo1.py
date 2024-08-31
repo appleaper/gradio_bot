@@ -77,7 +77,7 @@ with gr.Blocks() as demo:
             load_button = gr.Button("Load Local Video")
 
             start_radio = gr.Radio(["1分", "2分", "3分", "4分", '5分'], label='评分')
-            type_check_boxs = gr.CheckboxGroup(["高根", '丝袜'], label="")
+            type_check_boxs = gr.CheckboxGroup(["高根", '丝袜','女仆装','学生装','ol','巨乳','中乳','小乳','多人','情趣'], label="")
             describe_text = gr.Textbox(interactive=True)
             describe_button = gr.Button('提交')
             load_button.click(load_local_video, inputs=None, outputs=[video_output, video_path, start_radio, type_check_boxs, describe_text])

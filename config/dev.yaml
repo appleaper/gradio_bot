@@ -48,8 +48,20 @@ ui_conf:
   default_system: 'You are a helpful assistant.'
 
 video:
-  root_dir: '/media/pandas/DataHaven1/video'
+  root_dir: '/media/pandas/video/video'
   mark_csv_path: '/home/pandas/snap/code/RapidOcr/database_data/data/adult_video/movie_mark.csv'
+  hobby_tag:
+    high_heel: 高根
+    silk_stockings: 丝袜
+    maid_outfit: 女仆装
+    school_uniform: 学生装
+    office_lady: ol
+    large_bust: 巨乳
+    medium_bust: 中乳
+    small_bust: 小乳
+    multi_person: 多人
+    erotic: 情趣
+    chinese_subtitles: 中字
 
 ocr:
   font_path: '/home/pandas/snap/code/RapidOcr/ocr/font/SimHei.ttf'
