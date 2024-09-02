@@ -11,6 +11,13 @@ qwen_dict = conf_yaml['qwen_api_chat']
 qianfan_dict = conf_yaml['baidu_api_chat']
 local_dict = conf_yaml['local_chat']['model_dict']
 rag_list = conf_yaml['rag']['rag_info_name']
+# -----------------video----------------------------
+video_score_list = conf_yaml['video']['start_score']
+breast_size_list = conf_yaml['video']['breast_size']
+clothing_list = list(conf_yaml['video']['clothing'].values())
+action_list = list(conf_yaml['video']['action'].values())
+scene_list = list(conf_yaml['video']['scene'].values())
+other_list = list(conf_yaml['video']['other'].values())
 
 def clear_session():
     return '', [], []
@@ -75,13 +82,32 @@ with gr.Blocks() as demo:
             video_path = gr.Textbox(visible=False)
             # 使用按钮触发加载本地视频文件
             load_button = gr.Button("Load Local Video")
-
-            start_radio = gr.Radio(["1分", "2分", "3分", "4分", '5分'], label='评分')
-            type_check_boxs = gr.CheckboxGroup(["高根", '丝袜','女仆装','学生装','ol','巨乳','中乳','小乳','多人','情趣'], label="")
-            describe_text = gr.Textbox(interactive=True)
+            start_radio = gr.Radio(video_score_list, label='评分')
+            breast_radio = gr.Radio(breast_size_list, label='乳量')
+            clothing_boxs = gr.CheckboxGroup(clothing_list, label="着装")
+            action_boxs = gr.CheckboxGroup(action_list, label="动作")
+            scene_boxs = gr.CheckboxGroup(scene_list, label="场景")
+            other_boxs = gr.CheckboxGroup(other_list, label="其他")
+            describe_text = gr.Textbox(interactive=True, label='备注')
             describe_button = gr.Button('提交')
-            load_button.click(load_local_video, inputs=None, outputs=[video_output, video_path, start_radio, type_check_boxs, describe_text])
-            describe_button.click(mark_video_like, inputs=[start_radio, type_check_boxs, describe_text, video_path], outputs=None)
+            load_button.click(
+                load_local_video,
+                inputs=None,
+                outputs=[
+                    video_output, video_path,
+                    start_radio, breast_radio,
+                    clothing_boxs, action_boxs, scene_boxs, other_boxs,
+                    describe_text
+                ])
+
+            describe_button.click(
+                mark_video_like,
+                inputs=[
+                    video_path,
+                    start_radio, breast_radio,
+                    clothing_boxs, action_boxs, scene_boxs, other_boxs,
+                    describe_text],
+                outputs=None)
 
         with gr.TabItem('ocr check'):
             with gr.Row():
@@ -89,7 +115,5 @@ with gr.Blocks() as demo:
                 img_output = gr.Image()
                 ocr_text = gr.Textbox(lines=20, max_lines=50, label='ocr_ouput', interactive=True, show_copy_button=True, container=True)
             img_input.upload(show_result, inputs=img_input, outputs=[img_input, img_output, ocr_text])
-
-
 
 demo.launch(server_name='0.0.0.0')

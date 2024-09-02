@@ -38,10 +38,12 @@ rag:
   max_rag_len: 3000
   rag_info_name:
     - 决策的艺术
+    - 
   decision:
     database_name: '/home/pandas/snap/code/RapidOcr/database_data/data/decision_making'
     table_name: 'decision'
-    model_path: '/home/pandas/snap/model/Dmeta-embedding-zh'
+    model_path: '/home/pandas/snap/model/bge-small-zh-v1.5'
+    model_name: 'bge_small'
     top_k: 3
 
 ui_conf:
@@ -50,18 +52,42 @@ ui_conf:
 video:
   root_dir: '/media/pandas/video/video'
   mark_csv_path: '/home/pandas/snap/code/RapidOcr/database_data/data/adult_video/movie_mark.csv'
-  hobby_tag:
+  breast_size:
+    - 巨乳
+    - 中乳
+    - 小乳
+  start_score:
+    - 1分
+    - 2分
+    - 3分
+    - 4分
+    - 5分
+  clothing:
     high_heel: 高根
     silk_stockings: 丝袜
     maid_outfit: 女仆装
     school_uniform: 学生装
     office_lady: ol
-    large_bust: 巨乳
-    medium_bust: 中乳
-    small_bust: 小乳
-    multi_person: 多人
     erotic: 情趣
+  action:
+    oral_sex: 口交
+    breast_sex: 乳交
+    doggy_style: 后入
+    missionary_position: 前入
+    lotus_position: 坐莲
+  scene:
+    office: 办公室
+    school: 学校
+    bubble_bath: 泡泡浴
+    adult_entertainment_establishment: 风俗店
+    home: 家里
+    hotel: 酒店
+    photography_studio: 拍摄棚
+    Bathroom: 卫生间
+  other:
+    multi_person: 多人
     chinese_subtitles: 中字
+    tiktok: 抖音
 
 ocr:
   font_path: '/home/pandas/snap/code/RapidOcr/ocr/font/SimHei.ttf'

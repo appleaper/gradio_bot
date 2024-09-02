@@ -1,10 +1,11 @@
+import torch
 import hashlib
 import functools
 from local.qwen.qwen_api import qwen_model_init,qwen_model_detect
 from local.llama3.llama3_api import llama3_model_init, llama3_model_detect
 from config import conf_yaml
 from database_data.decision_making import add_rag_info
-from database_data.emb_model.init_model import init_model as dmeta_model_init
+from database_data.emb_model.init_model_dmeta import init_model as dmeta_model_init
 from threading import Thread
 from transformers import TextIteratorStreamer
 
@@ -51,6 +52,7 @@ def load_rag_cached(model_name):
     return load_rag_model(model_name)
 
 def local_chat(textbox, show_history, system_state, history, model_type, parm_b, steam_check_box, book_type):
+    torch.cuda.empty_cache()
     rag_model, rag_tokenizer = load_rag_model('Dmeta-embedding-zh')
     rag_textbox = add_rag_info(textbox, book_type, conf_yaml['rag']['max_rag_len'], rag_model, rag_tokenizer)
     if show_history is None:
@@ -67,7 +69,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     )
     model_name = model_type + '-' + parm_b
     model, tokenizer = load_model_cached(model_name)
-
+    print(history)
     if len(steam_check_box) == 0:
         if model_name == 'qwen-1.5B' and steam_check_box==[]:
             response_message = qwen_model_detect(history, model, tokenizer)
