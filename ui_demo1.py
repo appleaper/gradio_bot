@@ -3,6 +3,7 @@ from chat_api.qwen.qwen_response import qwen_chat
 from chat_api.baidu.baidu_api import baidu_chat
 from local.local_api import local_chat
 from video.video_play import load_local_video, mark_video_like
+from video.shutdown_computer import shutdown_computer
 from ocr.ocr_show import show_result
 from config import conf_yaml
 
@@ -90,6 +91,8 @@ with gr.Blocks() as demo:
             other_boxs = gr.CheckboxGroup(other_list, label="其他")
             describe_text = gr.Textbox(interactive=True, label='备注')
             describe_button = gr.Button('提交')
+            shutdown_button = gr.Button('关机')
+            shutdown_button.click(shutdown_computer, inputs=None, outputs=None)
             load_button.click(
                 load_local_video,
                 inputs=None,

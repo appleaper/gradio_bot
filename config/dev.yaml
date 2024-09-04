@@ -84,10 +84,15 @@ video:
     hotel: 酒店
     photography_studio: 拍摄棚
     Bathroom: 卫生间
+    washroom: 浴室
+    outdoorL: 户外
   other:
     multi_person: 多人
     chinese_subtitles: 中字
     tiktok: 抖音
+    invasion: 侵犯
+    first_person_perspective: 第一视角
+    infidelity: 出轨
 
 ocr:
   font_path: '/home/pandas/snap/code/RapidOcr/ocr/font/SimHei.ttf'
