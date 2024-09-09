@@ -93,6 +93,7 @@ video:
     invasion: 侵犯
     first_person_perspective: 第一视角
     infidelity: 出轨
+    uncensored: 无码
 
 ocr:
   font_path: '/home/pandas/snap/code/RapidOcr/ocr/font/SimHei.ttf'
