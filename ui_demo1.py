@@ -4,7 +4,7 @@ from chat_api.baidu.baidu_api import baidu_chat
 from local.local_api import local_chat
 from video.video_play import load_local_video, mark_video_like
 from video.shutdown_computer import shutdown_computer
-from ocr.ocr_show import show_result
+from ocr.ocr_model_select import get_result_image
 from config import conf_yaml
 
 default_system = conf_yaml['ui_conf']['default_system']
@@ -114,9 +114,11 @@ with gr.Blocks() as demo:
 
         with gr.TabItem('ocr check'):
             with gr.Row():
+                ocr_model_type = gr.Dropdown(['StepfunOcr', 'RapidOCR'], label="选择模型")
+            with gr.Row():
                 img_input = gr.Image(type='filepath', label='Image')
                 img_output = gr.Image()
                 ocr_text = gr.Textbox(lines=20, max_lines=50, label='ocr_ouput', interactive=True, show_copy_button=True, container=True)
-            img_input.upload(show_result, inputs=img_input, outputs=[img_input, img_output, ocr_text])
+            img_input.upload(get_result_image, inputs=[img_input, ocr_model_type], outputs=[img_input, img_output, ocr_text])
 
 demo.launch(server_name='0.0.0.0')

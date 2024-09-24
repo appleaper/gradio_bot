@@ -1,16 +1,14 @@
-from PIL import Image, ImageDraw, ImageFont
-from rapidocr_onnxruntime import RapidOCR
 from config import conf_yaml
+from PIL import Image, ImageDraw, ImageFont
 
 font_path = conf_yaml['ocr']['font_path']
-engine = RapidOCR()
-def ocr_detect(img_path):
-    result, elapse = engine(img_path)
-    image = Image.open(img_path)
-    return image, result
 
-def show_result(img_path):
-    image, ocr_result = ocr_detect(img_path)
+def ocr_detect(img_path, model):
+    result, elapse = model(img_path)
+    return result
+
+def rapid_deal_image(img_path, model):
+    image, ocr_result = ocr_detect(img_path, model)
     draw_image = Image.new("RGB", (image.width, image.height), "white")
     draw = ImageDraw.Draw(draw_image)
     font = ImageFont.truetype(font_path, 40)

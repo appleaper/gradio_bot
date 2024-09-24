@@ -20,15 +20,30 @@ baidu_api_chat:
 
 local_chat:
   model_dict:
-    qwen:
-      - 1.5B
-      - 7B
+    qwen2.5:
+      - 7B-Instruct
+      - 7B-Instruct-AWQ
+      - 1.5-Instruct-Coder
+      - 7B-Coder
+    qwen2:
+      - 1.5B-Instruct
+      - 7B-Instruct-AWQ
+      - 7B-VL-Instruct
     llama3:
       - 8B
+    MiniCPM3:
+      - 4B
   name2path:
-    qwen-1.5B: /home/pandas/snap/model/QwenQwen2-1.5B-Instruct
-    qwen-7B: /home/pandas/snap/model/QwenQwen2-7B-Instruct-AWQ
+    qwen2.5-7B-Instruct: /home/pandas/snap/model/qwen/qwen2.5-7b-instruct
+    qwen2.5-7B-Instruct-AWQ: /home/pandas/snap/model/qwen/Qwen2-7B-Instruct-AWQ
+    qwen2.5-1.5-Instruct-Coder: /home/pandas/snap/model/qwen/Qwen2.5-Coder-1.5B-Instruct
+    qwen2.5-7B-Coder: /home/pandas/snap/model/qwen/Qwen2.5-Coder-7B
+    qwen2-1.5B-Instruct: /home/pandas/snap/model/qwen/Qwen2-1.5B-Instruct
+    qwen2-7B-Instruct-AWQ: /home/pandas/snap/model/qwen/Qwen2-7B-Instruct-AWQ
+    qwen2-7B-VL-Instruct: /home/pandas/snap/model/qwen/Qwen2-VL-7B-Instruct
     llama3-8b: /home/pandas/snap/model/Llama3-8B-Chinese-Chat
+    MiniCPM3-4B: /home/pandas/snap/model/MiniCPM3-4B
+    StepfunOcr: /home/pandas/snap/model/stepfun-aiGOT-OCR2_0
   max_history_len: 6
   max_output_len: 512
 
@@ -75,6 +90,7 @@ video:
     doggy_style: 后入
     missionary_position: 前入
     lotus_position: 坐莲
+    foreplay: 前戏
   scene:
     office: 办公室
     school: 学校

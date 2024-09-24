@@ -40,6 +40,7 @@ def get_all_mp4_files(folder_paths):
             for file in files:
                 if file.endswith('.mp4'):
                     mp4_files.append(os.path.join(root, file))
+    random.shuffle(mp4_files)
     return mp4_files
 
 

@@ -1,8 +1,10 @@
 import torch
 import hashlib
 import functools
+import gradio as gr
 from local.qwen.qwen_api import qwen_model_init,qwen_model_detect
 from local.llama3.llama3_api import llama3_model_init, llama3_model_detect
+from local.MiniCPM.minicpm_api import minicpm_model_init, minicpm_model_detect
 from config import conf_yaml
 from database_data.decision_making import add_rag_info
 from database_data.emb_model.init_model_dmeta import init_model as dmeta_model_init
@@ -11,14 +13,24 @@ from transformers import TextIteratorStreamer
 
 name2path = conf_yaml['local_chat']['name2path']
 max_history_len = conf_yaml['local_chat']['max_history_len']
+
+qwen_support_list = [
+    'qwen2.5-7B-Instruct',
+    'qwen2.5-7B-Instruct-AWQ',
+    'qwen2.5-1.5-Instruct-Coder',
+    'qwen2.5-7B-Coder',
+    'qwen2-1.5B-Instruct',
+    'qwen2-7B-Instruct-AWQ'
+]
 def load_model(model_name):
-    if model_name == 'qwen-1.5B':
-        model, tokenizer = qwen_model_init(name2path['qwen-1.5B'])
-    elif model_name == 'qwen-7B':
-        model, tokenizer = qwen_model_init(name2path['qwen-7B'])
+    if model_name in qwen_support_list:
+        model, tokenizer = qwen_model_init(name2path[model_name])
     elif model_name == 'llama3-8b':
         model, tokenizer = llama3_model_init(name2path['llama3-8b'])
+    elif model_name == 'MiniCPM3-4B':
+        model, tokenizer = minicpm_model_init(name2path['MiniCPM3-4B'])
     else:
+        gr.Error(f'{model_name} not support!')
         assert False, 'model name not support!'
     return model, tokenizer
 
@@ -71,20 +83,21 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     model, tokenizer = load_model_cached(model_name)
     print(history)
     if len(steam_check_box) == 0:
-        if model_name == 'qwen-1.5B' and steam_check_box==[]:
-            response_message = qwen_model_detect(history, model, tokenizer)
-        elif model_name == 'qwen-7B' and steam_check_box==[]:
+        if model_name in qwen_support_list and steam_check_box==[]:
             response_message = qwen_model_detect(history, model, tokenizer)
         elif model_name == 'llama3-8b' and steam_check_box==[]:
             response_message = llama3_model_detect(history, model, tokenizer)
+        elif model_name == 'MiniCPM3-4B' and steam_check_box == []:
+            response_message = minicpm_model_detect(history, model, tokenizer)
         else:
+            gr.Error(f'{model_name} not support!')
             assert False, 'model name not support!'
         response_dict = {'role': 'assistant', 'content': response_message}
         history.append(response_dict)
         show_history.append((textbox, response_message))
         yield '', show_history, history
     else:
-        if model_name in ['qwen-1.5B', 'qwen-7B'] and len(steam_check_box)!=0 and steam_check_box[0]=='流式输出':
+        if model_name in qwen_support_list and len(steam_check_box)!=0 and steam_check_box[0]=='流式输出':
             conversion = tokenizer.apply_chat_template(history, add_generation_prompt=True, tokenize=False)
             model_inputs = tokenizer(conversion, return_tensors="pt").to('cuda')
             streamer = TextIteratorStreamer(tokenizer)
@@ -103,9 +116,8 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
                     response += output
                     yield '', show_history,history
         else:
+            gr.Error(f'{model_name} not support')
             assert False, 'model name not support!'
-
-
 
 if __name__ == '__main__':
     pass
