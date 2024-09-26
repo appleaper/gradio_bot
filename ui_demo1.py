@@ -67,10 +67,12 @@ def room_set(model_dict, model_chat):
                         inputs=[],
                         outputs=[textbox, chatbot, history_state])
 
+
+
 with gr.Blocks() as demo:
     with gr.Tabs():
         with gr.TabItem("聊天机器人"):
-            with gr.TabItem("本地"):
+            with gr.TabItem("本地文字"):
                 room_set(local_dict, local_chat)
             with gr.TabItem("阿里"):
                 room_set(qwen_dict, qwen_chat)
