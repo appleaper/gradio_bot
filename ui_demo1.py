@@ -6,6 +6,7 @@ from video.video_play import load_local_video, mark_video_like
 from video.shutdown_computer import shutdown_computer
 from ocr.ocr_model_select import get_result_image
 from config import conf_yaml
+from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
 
 default_system = conf_yaml['ui_conf']['default_system']
 qwen_dict = conf_yaml['qwen_api_chat']
@@ -74,6 +75,8 @@ with gr.Blocks() as demo:
         with gr.TabItem("聊天机器人"):
             with gr.TabItem("本地文字"):
                 room_set(local_dict, local_chat)
+            with gr.TabItem("本地图片"):
+                minicpm_ui()
             with gr.TabItem("阿里"):
                 room_set(qwen_dict, qwen_chat)
             with gr.TabItem("百度"):
@@ -123,4 +126,9 @@ with gr.Blocks() as demo:
                 ocr_text = gr.Textbox(lines=20, max_lines=50, label='ocr_ouput', interactive=True, show_copy_button=True, container=True)
             img_input.upload(get_result_image, inputs=[img_input, ocr_model_type], outputs=[img_input, img_output, ocr_text])
 
+'''
+要做的事情：
+1.在页面加一个显示显存的条
+2.图文框架那个，不要一开始就初始化模型，得等到要使用的时候才加载模型
+'''
 demo.launch(server_name='0.0.0.0')
