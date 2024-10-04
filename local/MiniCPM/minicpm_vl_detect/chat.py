@@ -2,6 +2,8 @@ import os
 import re
 import copy
 import torch
+import hashlib
+import functools
 import traceback
 import gradio as gr
 from PIL import Image
@@ -34,14 +36,28 @@ form_radio = {
 ERROR_MSG = "发生错误，请重试"
 MAX_NUM_FRAMES = 64
 
-model_path = '/home/pandas/snap/model/openbmbMiniCPM-V-2_6-int4'
+ModelPath = '/home/pandas/snap/model/openbmbMiniCPM-V-2_6-int4'
 def load_model(model_path):
     model = AutoModel.from_pretrained(model_path, trust_remote_code=True)
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model.eval()
     return model, tokenizer
 
-model, tokenizer = load_model(model_path)
+def cached_model_loader(func):
+    cache = {}
+    @functools.wraps(func)
+    def wrapper(model_path):
+        # 计算输入的哈希值
+        input_hash = hashlib.md5(model_path.encode()).hexdigest()
+        if input_hash not in cache:
+            # 如果输入的哈希值不在缓存中，则加载模型并缓存结果
+            cache[input_hash] = func(model_path)
+        return cache[input_hash]
+    return wrapper
+
+@cached_model_loader
+def load_model_cached(model_path):
+    return load_model(model_path)
 
 def model_detect(image_path, question, model, tokenizer):
     image = Image.open(image_path).convert('RGB')
@@ -132,6 +148,7 @@ def count_video_frames(_context):
     return num_frames
 
 def chat(img, msgs, ctx, params=None, vision_hidden_states=None):
+    model, tokenizer = load_model_cached(ModelPath)
     try:
         if msgs[-1]['role'] == 'assistant':
             msgs = msgs[:-1] # remove last which is added for streaming
