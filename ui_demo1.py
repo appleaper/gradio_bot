@@ -7,6 +7,7 @@ from video.shutdown_computer import shutdown_computer
 from ocr.ocr_model_select import get_result_image
 from config import conf_yaml
 from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
+from util.plot_data import create_pie_chart
 
 default_system = conf_yaml['ui_conf']['default_system']
 qwen_dict = conf_yaml['qwen_api_chat']
@@ -45,7 +46,7 @@ def room_set(model_dict, model_chat):
             modify_system = gr.Button("🛠️ Set system prompt and clear history", scale=2)
         system_state = gr.Textbox(value=default_system, visible=False)
 
-    chatbot = gr.Chatbot(label='qwen2')
+    chatbot = gr.Chatbot(label='qwen2', show_copy_button=True)
     with gr.Row():
         with gr.Column(scale=1):
             book_type = gr.Dropdown(rag_list, label="上下文知识")
@@ -81,6 +82,18 @@ with gr.Blocks() as demo:
                 room_set(qwen_dict, qwen_chat)
             with gr.TabItem("百度"):
                 room_set(qianfan_dict, baidu_chat)
+            with gr.TabItem('gpu'):
+                gpu_button = gr.Button('刷新')
+                gpu_plot = gr.Plot(label="forecast", format="png")
+                gpu_button.click(create_pie_chart, inputs=None, outputs=gpu_plot)
+            with gr.TabItem('ToDo'):
+                need_to_do_string = '''
+                1. 看一下JavaScript教程,
+                2. 给聊天框加一个复制按钮
+                3. 想给长视频添加一些切分点，把长视频切分为不同的短视频
+                4. 获取影片标题之后，将标题翻译为中文
+                '''
+                gr.Markdown(need_to_do_string)
 
         with gr.TabItem("本地视频播放"):
             gr.Markdown("# Local Video Player")
@@ -88,6 +101,7 @@ with gr.Blocks() as demo:
             video_path = gr.Textbox(visible=False)
             # 使用按钮触发加载本地视频文件
             load_button = gr.Button("Load Local Video")
+            title_text = gr.Textbox(interactive=True, label='标题')
             start_radio = gr.Radio(video_score_list, label='评分')
             breast_radio = gr.Radio(breast_size_list, label='乳量')
             clothing_boxs = gr.CheckboxGroup(clothing_list, label="着装")
@@ -105,7 +119,7 @@ with gr.Blocks() as demo:
                     video_output, video_path,
                     start_radio, breast_radio,
                     clothing_boxs, action_boxs, scene_boxs, other_boxs,
-                    describe_text
+                    describe_text, title_text
                 ])
 
             describe_button.click(

@@ -76,6 +76,7 @@ def init_dataframe(random_mp4_file):
 def load_local_video():
     folder_paths = [root_dir]  # 替换为你的文件夹路径列表
     random_mp4_file = get_random_mp4_file(folder_paths)
+    title_name = os.path.splitext(os.path.basename(random_mp4_file))[0]
     if os.path.exists(video_csv_path):
         df = pd.read_csv(video_csv_path)
         if len(df[df['video_path'] == random_mp4_file]) != 0:
@@ -105,20 +106,20 @@ def load_local_video():
                         other_boxs.append(csv2ch[csv_key])
                         continue
             return random_mp4_file, random_mp4_file, start_radio, breast_radio, \
-                clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text
+                clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name
         else:
             random_mp4_file, random_mp4_file, start_radio, breast_radio, clothing_boxs, \
                 action_boxs, scene_boxs, other_boxs, describe_text, new_df = init_dataframe(random_mp4_file)
             df = pd.concat((df, new_df))
             df.to_csv(video_csv_path, index=False)
             return random_mp4_file, random_mp4_file, start_radio, breast_radio, \
-                clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text
+                clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name
     else:
         random_mp4_file, random_mp4_file, start_radio, breast_radio, clothing_boxs, \
             action_boxs, scene_boxs, other_boxs, describe_text, df = init_dataframe(random_mp4_file)
         df.to_csv(video_csv_path, index=False)
         return random_mp4_file, random_mp4_file, start_radio, breast_radio, \
-            clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text
+            clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name
 
 
 def mark_video_like(
