@@ -4,10 +4,12 @@ from chat_api.baidu.baidu_api import baidu_chat
 from local.local_api import local_chat
 from video.video_play import load_local_video, mark_video_like
 from video.shutdown_computer import shutdown_computer
+from video.cut_video import video_cut
 from ocr.ocr_model_select import get_result_image
 from config import conf_yaml
 from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
 from util.plot_data import create_pie_chart
+from util.tool import load_html_file
 
 default_system = conf_yaml['ui_conf']['default_system']
 qwen_dict = conf_yaml['qwen_api_chat']
@@ -69,7 +71,8 @@ def room_set(model_dict, model_chat):
                         inputs=[],
                         outputs=[textbox, chatbot, history_state])
 
-
+def clear_gradio_text():
+    return '','','','','',''
 
 with gr.Blocks() as demo:
     with gr.Tabs():
@@ -86,12 +89,15 @@ with gr.Blocks() as demo:
                 gpu_button = gr.Button('刷新')
                 gpu_plot = gr.Plot(label="forecast", format="png")
                 gpu_button.click(create_pie_chart, inputs=None, outputs=gpu_plot)
+            with gr.TabItem('书籍'):
+                gr.HTML('<a href=file:///home/pandas/snap/code/RapidOcr/book/决策的艺术.html target="_blank">决策的艺术</a>')
             with gr.TabItem('ToDo'):
                 need_to_do_string = '''
                 1. 看一下JavaScript教程,
-                2. 给聊天框加一个复制按钮
+                2. 给聊天框加一个复制按钮  (完成)
                 3. 想给长视频添加一些切分点，把长视频切分为不同的短视频
                 4. 获取影片标题之后，将标题翻译为中文
+                5. 给页面添加一个读取md的文本框，用示例来阅读   （完成失败）
                 '''
                 gr.Markdown(need_to_do_string)
 
@@ -111,7 +117,33 @@ with gr.Blocks() as demo:
             describe_text = gr.Textbox(interactive=True, label='备注')
             describe_button = gr.Button('提交')
             shutdown_button = gr.Button('关机')
-            shutdown_button.click(shutdown_computer, inputs=None, outputs=None)
+            with gr.Row():
+                with gr.Column(scale=3):
+                    with gr.Row():
+                        start_cut_hour = gr.Textbox(label='s_hour', min_width=80, value='0')
+                        start_cut_minute = gr.Textbox(label='s_min', min_width=80)
+                        start_cut_second = gr.Textbox(label='s_sec', min_width=80)
+                with gr.Column(scale=3):
+                    with gr.Row():
+                        end_cut_hour = gr.Textbox(label='e_hour', min_width=80, value='0')
+                        end_cut_minute = gr.Textbox(label='e_min', min_width=80)
+                        end_cut_second = gr.Textbox(label='e_sec', min_width=80)
+                with gr.Column(scale=1):
+                    with gr.Row():
+                        with gr.Row():
+                            video_mark_add_btn = gr.Button('mark', min_width=80)
+                        with gr.Row():
+                            video_mark_clean_btn = gr.ClearButton(components=[
+                                start_cut_hour, start_cut_minute, start_cut_second,
+                                end_cut_hour, end_cut_minute, end_cut_second
+                            ])
+
+            video_mark_add_btn.click(
+                video_cut,
+                inputs=[video_path, start_cut_hour, start_cut_minute, start_cut_second, end_cut_hour, end_cut_minute, end_cut_second],
+                outputs=None
+            )
+
             load_button.click(
                 load_local_video,
                 inputs=None,
