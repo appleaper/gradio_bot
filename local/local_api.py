@@ -13,13 +13,14 @@ from database_data.emb_model.init_model_bge_m3 import model_init as bge_m3_model
 from database_data.emb_model.init_model_bge_m3 import model_detect as bge_m3_model_detect
 from threading import Thread
 from transformers import TextIteratorStreamer
-from util.tool import save_rag_name_dict, read_rag_name_dict
+from local.rag.util import read_rag_name_dict
 
 name2path = conf_yaml['local_chat']['name2path']
 max_history_len = conf_yaml['local_chat']['max_history_len']
 rag_database_name = conf_yaml['rag']['rag_database_name']
 rag_top_k = conf_yaml['rag']['top_k']
 rag_list_config_path = conf_yaml['rag']['rag_list_config_path']
+bge_mdoel_path = conf_yaml['rag']['beg_model_path']
 
 qwen_support_list = [
     'qwen2.5-7B-Instruct',
@@ -43,7 +44,7 @@ def load_model(model_name):
 
 def load_rag_model(model_name):
     if model_name == 'bge_m3':
-        model, tokenizer = bge_m3_model_init(conf_yaml['rag']['model_path'])
+        model, tokenizer = bge_m3_model_init(bge_mdoel_path)
         return model, tokenizer
     else:
         assert False, 'rag model not support!'

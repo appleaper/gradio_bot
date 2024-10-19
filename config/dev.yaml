@@ -41,16 +41,13 @@ local_chat:
 
 
 rag:
-  max_rag_len: 25000
-  rag_info_name:
-    - 决策的艺术
-    -
-  rag_database_name: '/home/pandas/snap/code/RapidOcr/database_data/rag/database'
-  model_path: '/home/pandas/snap/model/BAAIbge-m3'
-  model_name: 'bge_m3'
   top_k: 3
-  rag_list_config_path: '/home/pandas/snap/code/RapidOcr/config/rag_list.json'
+  max_rag_len: 25000
+  rag_database_name: '/home/pandas/snap/code/RapidOcr/database_data/rag/database'
   rag_data_csv_dir: '/home/pandas/snap/code/RapidOcr/database_data/rag/data_csv'
+  beg_model_path: '/home/pandas/snap/model/BAAIbge-m3'
+  ocr_model_path: '/home/pandas/snap/model/stepfun-aiGOT-OCR2_0'
+  rag_list_config_path: '/home/pandas/snap/code/RapidOcr/config/rag_list.json'
 
 ui_conf:
   default_system: 'You are a helpful assistant.'

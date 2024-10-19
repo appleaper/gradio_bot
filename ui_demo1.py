@@ -9,12 +9,12 @@ from ocr.ocr_model_select import get_result_image
 from config import conf_yaml
 from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
 from util.plot_data import create_pie_chart
-from local.rag.pdf_rag import new_file_rag, drop_lancedb_table, new_files_rag
-from util.tool import read_rag_name_dict
+from local.rag.pdf_rag import new_file_rag, drop_lancedb_table
+from local.rag.image_group_rag import new_files_rag
+from local.rag.util import read_rag_name_dict
 
 default_system = conf_yaml['ui_conf']['default_system']
 local_dict = conf_yaml['local_chat']['model_dict']
-rag_list = conf_yaml['rag']['rag_info_name']
 # -----------------video----------------------------
 video_score_list = conf_yaml['video']['start_score']
 breast_size_list = conf_yaml['video']['breast_size']
@@ -99,7 +99,7 @@ with gr.Blocks() as demo:
                     )
 
                 with gr.Row():
-                    rag_upload_file = gr.File(label='上传一个pdf或csv')
+                    rag_upload_file = gr.File(label='上传一个文件，支持pdf,csv,md格式')
                     rag_upload_file.upload(
                         new_file_rag,
                         inputs=rag_upload_file,
