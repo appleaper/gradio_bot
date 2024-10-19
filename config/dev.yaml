@@ -1,23 +1,3 @@
-qwen_api_chat:
-  qwen2:
-    - 1.5b-instruct
-    - 0.5b-instruct
-  qwen1.5:
-    - 1.8b-chat
-    - 0.5b-chat
-
-baidu_api_chat:
-  ernie-speed:
-    - ernie_speed
-    - ernie-speed-128k
-  ernie-lite:
-    - eb-instant
-    - ernie-lite-8k
-  ernie-tiny:
-    - ernie-tiny-8k
-  other:
-    - yi_34b_chat
-
 local_chat:
   model_dict:
     qwen2.5:
@@ -32,6 +12,19 @@ local_chat:
       - 8B
     MiniCPM3:
       - 4B
+    百度:
+      - ernie_speed
+      - ernie-speed-128k
+      - eb-instant
+      - ernie-lite-8k
+      - ernie-tiny-8k
+    零一万物:
+      - yi_34b_chat
+    阿里在线:
+      - 1.5b-instruct
+      - 0.5b-instruct
+      - 1.8b-chat
+      - 0.5b-chat
   name2path:
     qwen2.5-7B-Instruct: /home/pandas/snap/model/qwen/qwen2.5-7b-instruct
     qwen2.5-7B-Instruct-AWQ: /home/pandas/snap/model/qwen/Qwen2-7B-Instruct-AWQ
@@ -43,21 +36,21 @@ local_chat:
     MiniCPM3-4B: /home/pandas/snap/model/MiniCPM3-4B
     StepfunOcr: /home/pandas/snap/model/stepfun-aiGOT-OCR2_0
   max_history_len: 6
-  max_output_len: 1024
+  max_output_len: 2048
 
 
 
 rag:
-  max_rag_len: 3000
+  max_rag_len: 25000
   rag_info_name:
     - 决策的艺术
-    - 
-  decision:
-    database_name: '/home/pandas/snap/code/RapidOcr/database_data/data/decision_making'
-    table_name: 'decision'
-    model_path: '/home/pandas/snap/model/bge-small-zh-v1.5'
-    model_name: 'bge_small'
-    top_k: 3
+    -
+  rag_database_name: '/home/pandas/snap/code/RapidOcr/database_data/rag/database'
+  model_path: '/home/pandas/snap/model/BAAIbge-m3'
+  model_name: 'bge_m3'
+  top_k: 3
+  rag_list_config_path: '/home/pandas/snap/code/RapidOcr/config/rag_list.json'
+  rag_data_csv_dir: '/home/pandas/snap/code/RapidOcr/database_data/rag/data_csv'
 
 ui_conf:
   default_system: 'You are a helpful assistant.'
@@ -67,6 +60,8 @@ video:
   cut_save_dir: '/home/pandas/snap/cur_video'
   cut_record_path: '/home/pandas/snap/code/RapidOcr/database_data/data/adult_video/video_cut_record.txt'
   mark_csv_path: '/home/pandas/snap/code/RapidOcr/database_data/data/adult_video/movie_mark.csv'
+  translation_title_csv_path: '/home/pandas/snap/code/RapidOcr/video/translation.csv'
+  need_translation_title_path: '/home/pandas/snap/code/RapidOcr/video/need_translation.txt'
   breast_size:
     - 巨乳
     - 中大

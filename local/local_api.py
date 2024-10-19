@@ -1,4 +1,7 @@
+import os.path
+
 import torch
+import lancedb
 import hashlib
 import functools
 import gradio as gr
@@ -6,13 +9,17 @@ from local.qwen.qwen_api import qwen_model_init,qwen_model_detect
 from local.llama3.llama3_api import llama3_model_init, llama3_model_detect
 from local.MiniCPM.minicpm_api import minicpm_model_init, minicpm_model_detect
 from config import conf_yaml
-from database_data.decision_making import add_rag_info
-from database_data.emb_model.init_model_dmeta import init_model as dmeta_model_init
+from database_data.emb_model.init_model_bge_m3 import model_init as bge_m3_model_init
+from database_data.emb_model.init_model_bge_m3 import model_detect as bge_m3_model_detect
 from threading import Thread
 from transformers import TextIteratorStreamer
+from util.tool import save_rag_name_dict, read_rag_name_dict
 
 name2path = conf_yaml['local_chat']['name2path']
 max_history_len = conf_yaml['local_chat']['max_history_len']
+rag_database_name = conf_yaml['rag']['rag_database_name']
+rag_top_k = conf_yaml['rag']['top_k']
+rag_list_config_path = conf_yaml['rag']['rag_list_config_path']
 
 qwen_support_list = [
     'qwen2.5-7B-Instruct',
@@ -35,8 +42,8 @@ def load_model(model_name):
     return model, tokenizer
 
 def load_rag_model(model_name):
-    if model_name == 'Dmeta-embedding-zh':
-        model, tokenizer = dmeta_model_init(conf_yaml['rag']['decision']['model_path'])
+    if model_name == 'bge_m3':
+        model, tokenizer = bge_m3_model_init(conf_yaml['rag']['model_path'])
         return model, tokenizer
     else:
         assert False, 'rag model not support!'
@@ -63,10 +70,46 @@ def load_model_cached(model_name):
 def load_rag_cached(model_name):
     return load_rag_model(model_name)
 
+def add_rag_info(textbox, book_type, rag_model, rag_tokenizer, database_name, top_k):
+    vector = rag_model.encode(textbox, batch_size=1, max_length=8192)['dense_vecs']
+    db = lancedb.connect(database_name)
+
+    data = read_rag_name_dict(rag_list_config_path)
+    inverted_dict = {value: key for key, value in data.items()}
+
+    tb = db.open_table(inverted_dict[book_type])
+    records = tb.search(vector).limit(top_k).to_pandas()
+    rag_str = ''
+    for record_index, record in records.iterrows():
+        rag_str += f'' \
+                   f'相关文档{record_index}:\n' \
+                   f'标题\提问:{record["title"]}\n' \
+                   f'内容\回答:{record["content"]}\n' \
+                   f'来源:{os.path.basename(record["file_from"])}的第{record["page_count"]}页/行\n\n'
+    return rag_str
+
+
 def local_chat(textbox, show_history, system_state, history, model_type, parm_b, steam_check_box, book_type):
+    '''
+
+    :param textbox: 用户提问
+    :param show_history: 聊天组件
+    :param system_state: 角色设定
+    :param history: 历史记录
+    :param model_type: 模型类别
+    :param parm_b: 模型名字
+    :param steam_check_box: 流式输出与否，str类型
+    :param book_type: rag的名字
+    :return:
+    '''
     torch.cuda.empty_cache()
-    rag_model, rag_tokenizer = load_rag_model('Dmeta-embedding-zh')
-    rag_textbox = add_rag_info(textbox, book_type, conf_yaml['rag']['max_rag_len'], rag_model, rag_tokenizer)
+    if book_type == '不使用上下文':
+        rag_str = '无'
+    elif str(book_type) == 'None':
+        rag_str = '无'
+    else:
+        rag_model, rag_tokenizer = load_rag_model('bge_m3')
+        rag_str = add_rag_info(textbox, book_type, rag_model, rag_tokenizer, rag_database_name, rag_top_k)
     if show_history is None:
         history = []
     if len(history) == 0:
@@ -77,7 +120,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     else:
         history[0] = {"role":"system","content":system_state}
     history.append(
-        {'role':'user', 'content':rag_textbox}
+        {'role':'user', 'content':f'相关文档：{rag_str},用户提问:{textbox}'}
     )
     model_name = model_type + '-' + parm_b
     model, tokenizer = load_model_cached(model_name)
@@ -114,7 +157,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
                         history.append({'role': 'assistant', 'content': response})
                     show_history[-1] = (textbox,response)
                     response += output
-                    yield '', show_history,history
+                    yield '', show_history, history
         else:
             gr.Error(f'{model_name} not support')
             assert False, 'model name not support!'

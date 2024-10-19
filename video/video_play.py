@@ -1,9 +1,11 @@
 import os
 import random
 
+import fsspec.implementations.webhdfs
 import gradio as gr
 import pandas as pd
 from config import conf_yaml
+from video.title_translation import get_translation_title, contains_chinese_or_japanese
 
 root_dir = conf_yaml['video']['root_dir']
 video_csv_path = conf_yaml['video']['mark_csv_path']
@@ -18,6 +20,8 @@ label_dict = {
     'scene':scene_dict,
     'other':other_dict
 }
+
+translation_title_dict = get_translation_title()
 
 def get_csv_columns_name():
     csv2ch = {}
@@ -48,11 +52,23 @@ def get_random_mp4_file(folder_paths):
     mp4_files = get_all_mp4_files(folder_paths)
 
     if not mp4_files:
+        gr.Error('请打开video盘')
         return None  # 如果没有找到任何.mp4文件，返回None
 
     # 随机选择一个文件
     random_file = random.choice(mp4_files)
     return random_file
+def get_translation_name(random_mp4_name):
+    '''返回翻译后的名字'''
+    if random_mp4_name not in translation_title_dict:
+        if contains_chinese_or_japanese(random_mp4_name):
+            with open(conf_yaml['video']['need_translation_title_path'], 'a', encoding='utf8') as f:
+                f.writelines(random_mp4_name + '\n')
+            return random_mp4_name
+        else:
+            return random_mp4_name
+    else:
+        return translation_title_dict[random_mp4_name]
 
 def init_dataframe(random_mp4_file):
     df = pd.DataFrame(columns=columns_list)
@@ -77,6 +93,7 @@ def load_local_video():
     folder_paths = [root_dir]  # 替换为你的文件夹路径列表
     random_mp4_file = get_random_mp4_file(folder_paths)
     title_name = os.path.splitext(os.path.basename(random_mp4_file))[0]
+    translation_title_path = get_translation_name(os.path.basename(random_mp4_file))
     if os.path.exists(video_csv_path):
         df = pd.read_csv(video_csv_path)
         if len(df[df['video_path'] == random_mp4_file]) != 0:
@@ -106,20 +123,20 @@ def load_local_video():
                         other_boxs.append(csv2ch[csv_key])
                         continue
             return random_mp4_file, random_mp4_file, start_radio, breast_radio, \
-                clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name
+                clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name, translation_title_path
         else:
             random_mp4_file, random_mp4_file, start_radio, breast_radio, clothing_boxs, \
                 action_boxs, scene_boxs, other_boxs, describe_text, new_df = init_dataframe(random_mp4_file)
             df = pd.concat((df, new_df))
             df.to_csv(video_csv_path, index=False)
             return random_mp4_file, random_mp4_file, start_radio, breast_radio, \
-                clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name
+                clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name, translation_title_path
     else:
         random_mp4_file, random_mp4_file, start_radio, breast_radio, clothing_boxs, \
             action_boxs, scene_boxs, other_boxs, describe_text, df = init_dataframe(random_mp4_file)
         df.to_csv(video_csv_path, index=False)
         return random_mp4_file, random_mp4_file, start_radio, breast_radio, \
-            clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name
+            clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name, translation_title_path
 
 
 def mark_video_like(
