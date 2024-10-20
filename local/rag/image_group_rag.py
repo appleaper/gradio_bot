@@ -54,7 +54,7 @@ def deal_images_group(group_name, rag_files, progress=gr.Progress()):
     model_bge = load_bge_model_cached(bge_model_path)
     for index, file_name in tqdm(enumerate(rag_files), total=len(rag_files)):
         upload_file, suffix = os.path.splitext(os.path.basename(file_name))
-        if suffix in ['.jpg', 'jpeg', 'png']:
+        if suffix in ['.jpg', '.jpeg', '.png']:
             ocr_result = model.chat(tokenizer, file_name, ocr_type='format')
             info = {}
             info['title'] = ''

@@ -7,6 +7,7 @@ import gradio as gr
 import pandas as pd
 from tqdm import tqdm
 from PIL import Image
+from docx import Document
 from local.rag.rag_model import load_bge_model_cached, load_model_cached
 from local.rag.util import save_rag_name_dict, read_rag_name_dict, write_rag_name_dict, save_rag_csv_name, save_info_to_lancedb, read_md_doc, split_by_heading
 
@@ -142,6 +143,51 @@ def deal_markdown(md_path, progress=gr.Progress()):
     id = save_rag_name_dict(file_name, data, rag_list_config_path)
     return result_df, df_save_path, id
 
+def split_docx_into_chunks(docx_path):
+    """
+    将.docx文件的内容分割成指定大小的块。
+
+    参数:
+    docx_path (str): .docx文件的路径。
+    chunk_size (int): 每个块的大小（默认为8000个字符）。
+
+    返回:
+    list: 包含所有文本块的列表。
+    """
+    # 打开.docx文件
+    doc = Document(docx_path)
+    text = []
+
+    # 遍历文档中的每个段落，并添加到文本列表中
+    for para in doc.paragraphs:
+        if len(para.text) == 0:
+            continue
+        else:
+            text.append(para.text)
+    return text
+
+def deal_docx(doc_path, progress=gr.Progress()):
+    model_bge = load_bge_model_cached(bge_model_path)
+    file_name = os.path.basename(doc_path)
+    docx_file_name = os.path.splitext(file_name)[0]
+    result_list = []
+    text_list = split_docx_into_chunks(doc_path)
+    for index, text in tqdm(enumerate(text_list), total=len(text_list)):
+        info = {}
+        info['title'] = ''
+        info['content'] = text
+        info['page_count'] = ''
+        info['vector'] = model_bge.encode(text, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        info['file_from'] = file_name
+        result_list.append(info)
+        progress(round((index + 1) / len(text_list), 2))
+    result_df = pd.DataFrame(result_list)
+    df_save_path = os.path.join(rag_data_csv_dir, docx_file_name + '.csv')
+    result_df.to_csv(df_save_path, index=False, encoding='utf8')
+    data = read_rag_name_dict(rag_list_config_path)
+    id = save_rag_name_dict(file_name, data, rag_list_config_path)
+    return result_df, df_save_path, id
+
 def new_file_rag(rag_file):
     upload_file, suffix = os.path.splitext(os.path.basename(rag_file))
     if suffix == '.pdf' or suffix=='.jpg':
@@ -152,6 +198,9 @@ def new_file_rag(rag_file):
         inverted_dict = save_data_to_lancedb(df, id)
     elif suffix == '.md':
         df, df_save_path, id = deal_markdown(rag_file)
+        inverted_dict = save_data_to_lancedb(df, id)
+    elif suffix == '.docx':
+        df, df_save_path, id = deal_docx(rag_file)
         inverted_dict = save_data_to_lancedb(df, id)
     else:
         raise gr.Error('上传的文件后缀格式不支持')

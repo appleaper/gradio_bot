@@ -99,7 +99,7 @@ with gr.Blocks() as demo:
                     )
 
                 with gr.Row():
-                    rag_upload_file = gr.File(label='上传一个文件，支持pdf,csv,md格式')
+                    rag_upload_file = gr.File(label='上传一个文件，支持pdf,csv,md,jpg,docx格式')
                     rag_upload_file.upload(
                         new_file_rag,
                         inputs=rag_upload_file,
@@ -125,6 +125,18 @@ with gr.Blocks() as demo:
                 4. 获取影片标题之后，将标题翻译为中文    (完成)
                 5. 给页面添加一个读取md的文本框，用示例来阅读   （完成失败）
                 6. 输入pdf,csv就能挂载rag技术  (完成)
+                7. rag能接受docx文件 (完成)
+                8. 能接受网页链接，解析html页面，获取其知识
+                
+                人脸识别：检测图中的人脸，并为人脸标记出边框，同时定位人脸五官的位置\n
+                人脸校验：计算两张人脸的相似度，从而判断是否同一个人\n
+                目标检测识别： 目标对象检测\n
+                情感分析：判断情感类别属性\n
+                文本翻译：中译英，或英译中\n
+                语音识别：输入一段语音，返回识别后的文本结果\n
+                语音合成：将用户输入的文字，转换成自然语音输出\n
+                声纹生成：输入一段语音，返回声纹向量\n
+                文本、图片审核：确定图片或者文本是否涉及政治，暴力，黄色等不良内容\n
                 '''
                 gr.Markdown(need_to_do_string)
 
