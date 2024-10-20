@@ -38,8 +38,6 @@ local_chat:
   max_history_len: 6
   max_output_len: 2048
 
-
-
 rag:
   top_k: 10
   max_rag_len: 25000
