@@ -40,7 +40,7 @@ local_chat:
 
 rag:
   top_k: 10
-  max_rag_len: 25000
+  max_rag_len: 10000
   rag_database_name: '/home/pandas/snap/code/RapidOcr/database_data/rag/database'
   rag_data_csv_dir: '/home/pandas/snap/code/RapidOcr/database_data/rag/data_csv'
   beg_model_path: '/home/pandas/snap/model/BAAIbge-m3'

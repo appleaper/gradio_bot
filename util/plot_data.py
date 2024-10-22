@@ -27,7 +27,7 @@ def create_pie_chart():
     total_gpu = gpu_memory_info[0]['total']
 
     used_gpu = used_gpu / total_gpu
-    no_used_gpu = (total_gpu-used_gpu) / total_gpu
+    no_used_gpu = 1-used_gpu
     data = [used_gpu, no_used_gpu]
     labels = ['In use', 'Unused']
     if labels is None:

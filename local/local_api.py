@@ -21,6 +21,7 @@ rag_database_name = conf_yaml['rag']['rag_database_name']
 rag_top_k = conf_yaml['rag']['top_k']
 rag_list_config_path = conf_yaml['rag']['rag_list_config_path']
 bge_mdoel_path = conf_yaml['rag']['beg_model_path']
+bge_max_rag_len = conf_yaml['rag']['max_rag_len']
 
 qwen_support_list = [
     'qwen2.5-7B-Instruct',
@@ -71,7 +72,7 @@ def load_model_cached(model_name):
 def load_rag_cached(model_name):
     return load_rag_model(model_name)
 
-def add_rag_info(textbox, book_type, rag_model, rag_tokenizer, database_name, top_k):
+def add_rag_info(textbox, book_type, rag_model, rag_tokenizer, database_name, top_k, model, tokenizer, model_name):
     vector = rag_model.encode(textbox, batch_size=1, max_length=8192)['dense_vecs']
     db = lancedb.connect(database_name)
 
@@ -81,12 +82,33 @@ def add_rag_info(textbox, book_type, rag_model, rag_tokenizer, database_name, to
     tb = db.open_table(inverted_dict[book_type])
     records = tb.search(vector).limit(top_k).to_pandas()
     rag_str = ''
+    now_str_count = 0
     for record_index, record in records.iterrows():
-        rag_str += f'' \
+        rag_str_i = f'' \
                    f'相关文档{record_index}:\n' \
                    f'标题\提问:{record["title"]}\n' \
                    f'内容\回答:{record["content"]}\n' \
                    f'来源:{os.path.basename(record["file_from"])}的第{record["page_count"]}页/行\n\n'
+
+        messages = [
+            {"role":"system","content":'你是一名评估员，负责评估检索到的文档与用户问题的相关性。如果文档包含与用户问题相关的关键词或语义含义，将其评定为相关。这不需要是一个严格的测试。目标是筛选出错误的检索结果。给出一个二元分数“是”或“否”，以表明该文档是否与问题相关。'},
+            {'role':'user', 'content':f'相关文档：{rag_str},用户提问:{textbox}'}
+        ]
+        if model_name in qwen_support_list:
+            response_message = qwen_model_detect(messages, model, tokenizer)
+        elif model_name == 'llama3-8b':
+            response_message = llama3_model_detect(messages, model, tokenizer)
+        elif model_name == 'MiniCPM3-4B':
+            response_message = minicpm_model_detect(messages, model, tokenizer)
+        else:
+            assert False, f'{model_name} not support!'
+        if response_message == '是':
+            if now_str_count < bge_max_rag_len:
+                rag_str += rag_str_i
+                now_str_count += len(rag_str_i)
+            else:
+                rag_str += rag_str_i[:(bge_max_rag_len - now_str_count)]
+                break
     return rag_str
 
 
@@ -104,13 +126,15 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     :return:
     '''
     torch.cuda.empty_cache()
+    model_name = model_type + '-' + parm_b
+    model, tokenizer = load_model_cached(model_name)
     if book_type == '不使用上下文':
         rag_str = '无'
     elif str(book_type) == 'None':
         rag_str = '无'
     else:
         rag_model, rag_tokenizer = load_rag_model('bge_m3')
-        rag_str = add_rag_info(textbox, book_type, rag_model, rag_tokenizer, rag_database_name, rag_top_k)
+        rag_str = add_rag_info(textbox, book_type, rag_model, rag_tokenizer, rag_database_name, rag_top_k, model, tokenizer, model_name)
     if show_history is None:
         history = []
     if len(history) == 0:
@@ -123,9 +147,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     history.append(
         {'role':'user', 'content':f'相关文档：{rag_str},用户提问:{textbox}'}
     )
-    model_name = model_type + '-' + parm_b
-    model, tokenizer = load_model_cached(model_name)
-    print(history)
+
     if len(steam_check_box) == 0:
         if model_name in qwen_support_list and steam_check_box==[]:
             response_message = qwen_model_detect(history, model, tokenizer)
