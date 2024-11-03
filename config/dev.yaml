@@ -52,7 +52,7 @@ ui_conf:
 
 video:
   root_dir: '/media/pandas/video/video'
-  cut_save_dir: '/home/pandas/snap/cur_video'
+  cut_save_dir: '/media/pandas/video/video/cur_video'
   cut_record_path: '/home/pandas/snap/code/RapidOcr/database_data/data/adult_video/video_cut_record.txt'
   mark_csv_path: '/home/pandas/snap/code/RapidOcr/database_data/data/adult_video/movie_mark.csv'
   translation_title_csv_path: '/home/pandas/snap/code/RapidOcr/video/translation.csv'

@@ -11,6 +11,7 @@ from local.rag.pdf_rag import new_file_rag, drop_lancedb_table
 from local.rag.image_group_rag import new_files_rag
 from local.rag.util import read_rag_name_dict, read_md_doc
 
+
 default_system = conf_yaml['ui_conf']['default_system']
 local_dict = conf_yaml['local_chat']['model_dict']
 # -----------------video----------------------------
@@ -21,6 +22,9 @@ action_list = list(conf_yaml['video']['action'].values())
 scene_list = list(conf_yaml['video']['scene'].values())
 other_list = list(conf_yaml['video']['other'].values())
 rag_list_config_path = conf_yaml['rag']['rag_list_config_path']
+
+import os
+os.environ["GRADIO_TEMP_DIR"] = os.path.join(os.getcwd(), "tmp")
 
 def clear_session():
     return '', [], []
@@ -181,6 +185,11 @@ with gr.Blocks() as demo:
                     clothing_boxs, action_boxs, scene_boxs, other_boxs,
                     describe_text],
                 outputs=None)
+            shutdown_button.click(
+                shutdown_computer,
+                inputs=None,
+                outputs=None
+            )
 
         with gr.TabItem('ocr check'):
             with gr.Row():

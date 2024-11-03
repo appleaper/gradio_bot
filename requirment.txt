@@ -1,0 +1,17 @@
+gradio==4.44.1
+torch==2.4.0
+lancedb
+transformers
+FlagEmbedding
+ragidocr_onnxruntime
+decord
+GPUtil
+matplotlib
+PyMuPDF
+python-docx
+tiktoken
+torchvision
+verovio
+autoawq
+http://thunlp.oss-cn-qingdao.aliyuncs.com/multi_modal/never_delete/modelscope_studio-0.4.0.9-py3-none-any.whl
+bitsandbytes
