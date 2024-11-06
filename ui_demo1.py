@@ -110,9 +110,10 @@ with gr.Blocks() as demo:
                 with gr.Row():
                     upload_files_group_name = gr.Textbox(label='组名', placeholder='给群组起一个名字')
                 with gr.Row():
-                    rag_upload_files = gr.Files(label='上传多张图片，支持png,jpg,jpeg格式')
-                with gr.Row():
                     rag_submit_files_button = gr.Button(value='开始解析')
+                with gr.Row():
+                    rag_upload_files = gr.Files(label='上传多张图片，支持png,jpg,jpeg格式')
+
                 rag_submit_files_button.click(
                     new_files_rag,
                     inputs=[rag_upload_files, upload_files_group_name],
