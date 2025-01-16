@@ -63,6 +63,7 @@ def pdf_to_images(pdf_path, progress=gr.Progress()):
     df_save_path = save_rag_csv_name(df, rag_data_csv_dir, id, rag_list_config_path)
     return df, df_save_path, id
 
+
 def dataframe_save_database(df, database_name, table_name):
     db = lancedb.connect(database_name)
     table_path = os.path.join(database_name, table_name + '.lance')

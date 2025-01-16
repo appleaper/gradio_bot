@@ -20,21 +20,25 @@ def save_info_to_lancedb(df):
     df_out = pd.DataFrame(result_list)
     return df_out
 
+def get_keys_from_value(dictionary, value):
+    return [key for key, val in dictionary.items() if val == value]
 
 def save_rag_name_dict(pdf_name, history_rag_dict, rag_list_config_path):
     now = datetime.now()
     date_time_str = now.strftime("%Y_%m_%d_%H_%M_%S")
     file_name, end_suff = os.path.splitext(os.path.basename(pdf_name))
-    while True:
-        id = str(uuid.uuid4())[:8]
-        if id not in history_rag_dict.keys():
-            if file_name not in history_rag_dict.values():
-                history_rag_dict[id] = file_name
-            else:
-                file_name = file_name + '_' + date_time_str
-                history_rag_dict[id] = file_name
-            break
-
+    if file_name in list(history_rag_dict.values()):
+        id = get_keys_from_value(history_rag_dict, file_name)[0]
+    else:
+        while True:
+            id = str(uuid.uuid4())[:8]
+            if id not in history_rag_dict.keys():
+                if file_name not in history_rag_dict.values():
+                    history_rag_dict[id] = file_name
+                else:
+                    file_name = file_name + '_' + date_time_str
+                    history_rag_dict[id] = file_name
+                break
     with open(rag_list_config_path, 'w', encoding='utf8') as json_file:
         json.dump(history_rag_dict, json_file, indent=4, ensure_ascii=False)  # 使用indent参数美化输出
     return id

@@ -9,7 +9,7 @@ from video.title_translation import get_translation_title, contains_chinese_or_j
 
 root_dir = conf_yaml['video']['root_dir']
 video_csv_path = conf_yaml['video']['mark_csv_path']
-
+start_score_list = conf_yaml['video']['start_score']
 clothing_dict = conf_yaml['video']['clothing']
 action_dict = conf_yaml['video']['action']
 scene_dict = conf_yaml['video']['scene']
@@ -160,6 +160,7 @@ def mark_video_like(
         for ch in set_value_list:
             select_csv2ch.append(ch2csv[ch])
         df.loc[df['video_path'] == video_path, select_csv2ch] = True
+    df = df[df['start_score'].isin(start_score_list)]
     df.to_csv(video_csv_path, index=False, encoding='utf8')
     gr.Info('success', duration=2)
 

@@ -29,7 +29,9 @@ qwen_support_list = [
     'qwen2.5-1.5-Instruct-Coder',
     'qwen2.5-7B-Coder',
     'qwen2-1.5B-Instruct',
-    'qwen2-7B-Instruct-AWQ'
+    'qwen2-7B-Instruct-AWQ',
+    'qwen2.5-3B-Instruct',
+    'qwen2.5-0.5B-Instruct'
 ]
 def load_model(model_name):
     if model_name in qwen_support_list:
@@ -40,7 +42,7 @@ def load_model(model_name):
         model, tokenizer = minicpm_model_init(name2path['MiniCPM3-4B'])
     else:
         gr.Error(f'{model_name} not support!')
-        assert False, 'model name not support!'
+        assert False, f'model {model_name} name not support!'
     return model, tokenizer
 
 def load_rag_model(model_name):
