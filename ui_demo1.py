@@ -1,5 +1,5 @@
 import gradio as gr
-from local.local_api import local_chat
+from local.chat_model.chat_do import local_chat
 from video.video_play import load_local_video, mark_video_like
 from video.shutdown_computer import shutdown_computer
 from video.cut_video import video_cut
@@ -10,7 +10,7 @@ from util.plot_data import create_pie_chart
 from local.rag.pdf_rag import new_file_rag, drop_lancedb_table
 from local.rag.image_group_rag import new_files_rag
 from local.rag.util import read_rag_name_dict, read_md_doc
-
+from util.tool import read_json_file, save_json_file
 
 default_system = conf_yaml['ui_conf']['default_system']
 local_dict = conf_yaml['local_chat']['model_dict']
@@ -22,6 +22,7 @@ action_list = list(conf_yaml['video']['action'].values())
 scene_list = list(conf_yaml['video']['scene'].values())
 other_list = list(conf_yaml['video']['other'].values())
 rag_list_config_path = conf_yaml['rag']['rag_list_config_path']
+knowledge_base_info_save_path = conf_yaml['rag']['knowledge_base_info_save_path']
 
 import os
 os.environ["GRADIO_TEMP_DIR"] = os.path.join(os.getcwd(), "tmp")
@@ -31,6 +32,40 @@ def clear_session():
 
 def refresh_rag():
     return list(read_rag_name_dict(rag_list_config_path).values())
+
+def add_group_database(selected_documents_list, new_knowledge_base_name):
+    # 所有知识库的记录，键为知识库名，值为构成该知识库的文章名列表
+    all_knowledge_bases_record = {}
+    if os.path.exists(knowledge_base_info_save_path):
+        # 若文件存在，加载知识库信息
+        all_knowledge_bases_record = read_json_file(knowledge_base_info_save_path)
+    all_knowledge_bases_record_name_list = list(all_knowledge_bases_record.keys())
+    if len(new_knowledge_base_name) == 0:
+        gr.Warning('请输入新知识库的名字')
+        return selected_documents_list, '', all_knowledge_bases_record, all_knowledge_bases_record_name_list
+    else:
+        # 将新建的知识库信息添加到记录中
+        all_knowledge_bases_record[new_knowledge_base_name] = selected_documents_list
+        # 保存更新后的知识库信息
+        save_json_file(all_knowledge_bases_record, knowledge_base_info_save_path)
+        gr.Info('新建知识库成功')
+        return [], '', all_knowledge_bases_record, all_knowledge_bases_record_name_list
+
+def delete_group_database(knowledge_bases_to_delete):
+    # 所有知识库的记录，键为知识库名，值为构成该知识库的文章名列表
+    if os.path.exists(knowledge_base_info_save_path):
+        # 若文件存在，加载知识库信息
+        all_knowledge_bases_record = read_json_file(knowledge_base_info_save_path)
+    else:
+        all_knowledge_bases_record = {}  # 这里修正为字典，因为后续操作是基于字典的键删除
+    # 遍历要删除的知识库名称列表，从记录中删除对应的知识库
+    for knowledge_base_name in knowledge_bases_to_delete:
+        if knowledge_base_name in all_knowledge_bases_record:
+            del all_knowledge_bases_record[knowledge_base_name]
+    # 保存更新后的知识库信息
+    save_json_file(all_knowledge_bases_record, knowledge_base_info_save_path)
+    gr.Info('删除知识库成功')
+    return [], all_knowledge_bases_record, list(all_knowledge_bases_record.keys())
 
 with gr.Blocks() as demo:
     with gr.Tabs():
@@ -56,7 +91,7 @@ with gr.Blocks() as demo:
                 chatbot = gr.Chatbot(label='qwen2', show_copy_button=True)
                 with gr.Row():
                     with gr.Column(scale=1):
-                        contextual_knowledge_list = list(read_rag_name_dict(rag_list_config_path).values())
+                        contextual_knowledge_list = list(read_json_file(knowledge_base_info_save_path).keys())
                         book_type = gr.Dropdown(choices=contextual_knowledge_list, label="上下文知识")
                     with gr.Column(scale=4):
                         textbox = gr.Textbox(lines=1, label='输入')
@@ -84,20 +119,19 @@ with gr.Blocks() as demo:
                 gpu_button = gr.Button('刷新')
                 gpu_plot = gr.Plot(label="forecast", format="png")
                 gpu_button.click(create_pie_chart, inputs=None, outputs=gpu_plot)
-            # with gr.TabItem('书籍'):
-            #     gr.HTML('<a href=file:///home/pandas/snap/code/RapidOcr/book/决策的艺术.html target="_blank">决策的艺术</a>')
 
             with gr.TabItem('rag'):
+                rag_list_value_gradio = gr.JSON(visible=False)
+                rag_list_value_gradio.value = read_rag_name_dict(rag_list_config_path)
                 with gr.Row():
-                    rag_list_value = list(read_rag_name_dict(rag_list_config_path).values())
-                    rag_checkboxgroup = gr.CheckboxGroup(choices=rag_list_value, label="rag列表")
+                    rag_checkboxgroup = gr.CheckboxGroup(choices=list(rag_list_value_gradio.value.values()), label="rag列表")
                 with gr.Row():
                     with gr.Column(scale=1):
                         rag_delete_button = gr.Button(value='删除')
                     rag_delete_button.click(
                         drop_lancedb_table,
                         inputs=rag_checkboxgroup,
-                        outputs=[rag_checkboxgroup, book_type]
+                        outputs=rag_list_value_gradio
                     )
 
                 with gr.Row():
@@ -105,7 +139,7 @@ with gr.Blocks() as demo:
                     rag_upload_file.upload(
                         new_file_rag,
                         inputs=rag_upload_file,
-                        outputs=[rag_checkboxgroup, book_type]
+                        outputs=rag_list_value_gradio
                     )
                 with gr.Row():
                     upload_files_group_name = gr.Textbox(label='组名', placeholder='给群组起一个名字')
@@ -117,8 +151,58 @@ with gr.Blocks() as demo:
                 rag_submit_files_button.click(
                     new_files_rag,
                     inputs=[rag_upload_files, upload_files_group_name],
-                    outputs=[rag_checkboxgroup, book_type]
+                    outputs=rag_list_value_gradio
                 )
+
+
+
+
+            with gr.TabItem('知识库'):
+                knowledge_base_info_dict = {}
+                if os.path.exists(knowledge_base_info_save_path):
+                    # 若文件存在，加载知识库信息
+                    knowledge_base_info_dict = read_json_file(knowledge_base_info_save_path)
+                # 历史状态，保存已有的知识库名列表
+                existing_knowledge_bases_state = gr.State(value=list(knowledge_base_info_dict.keys()))
+                # 可选文章复选框组
+                selectable_documents_checkbox_group = gr.CheckboxGroup(
+                    choices=list(rag_list_value_gradio.value.values()), label='可选文章'
+                )
+                # 可选知识库复选框组
+                selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(
+                    choices=existing_knowledge_bases_state.value, label='已有知识库')
+                # 新建知识库名输入文本框
+                new_knowledge_base_name_textbox = gr.Textbox(lines=1, label='知识库名', placeholder='给新建的知识库起个名字吧')
+                # 新建知识库按钮
+                create_knowledge_base_button = gr.Button("新建知识库")
+                # 删除知识库按钮
+                delete_knowledge_base_button = gr.Button("删除知识库")
+                # 显示知识库信息的 JSON 表格
+                knowledge_base_info_json_table = gr.JSON()
+
+                create_knowledge_base_button.click(
+                    add_group_database,
+                    inputs=[selectable_documents_checkbox_group, new_knowledge_base_name_textbox],
+                    outputs=[selectable_documents_checkbox_group, new_knowledge_base_name_textbox,
+                             knowledge_base_info_json_table, existing_knowledge_bases_state]
+                )
+                # 删除知识库按钮点击事件
+                delete_knowledge_base_button.click(
+                    delete_group_database,
+                    inputs=[selectable_knowledge_bases_checkbox_group],
+                    outputs=[selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table,
+                             existing_knowledge_bases_state]
+                )
+
+                @knowledge_base_info_json_table.change(inputs=knowledge_base_info_json_table,
+                                                       outputs=[selectable_knowledge_bases_checkbox_group, book_type])
+                def update_selectable_knowledge_bases(knowledge_base_info):
+                    return gr.CheckboxGroup(choices=list(knowledge_base_info.keys()), label='可选知识库'),gr.Dropdown(choices=list(knowledge_base_info.keys()), label="上下文知识")
+
+                @rag_list_value_gradio.change(inputs=rag_list_value_gradio,
+                                                       outputs=[rag_checkboxgroup, selectable_documents_checkbox_group])
+                def update_selectable_knowledge_bases(input_value):
+                    return gr.CheckboxGroup(choices=list(input_value.keys()), label="rag列表"), gr.CheckboxGroup(choices=list(input_value.keys()), label='可选文章')
 
             with gr.TabItem('ToDo'):
                 need_to_do_string = read_md_doc('./readme.md')

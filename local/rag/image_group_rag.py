@@ -7,8 +7,8 @@ import gradio as gr
 from tqdm import tqdm
 from local.rag.util import save_info_to_lancedb, read_rag_name_dict
 from local.rag.rag_model import load_model_cached, load_bge_model_cached
-
 from config import conf_yaml
+
 rag_config = conf_yaml['rag']
 rag_top_k = rag_config['top_k']
 rag_ocr_model_path = rag_config['ocr_model_path']
@@ -41,11 +41,10 @@ def save_rag_group_csv_name(df2, rag_data_csv_dir, id, rag_list_config_path):
         df2.to_csv(save_path, index=False, encoding='utf8')
     return save_path
 
-def get_rag_now_list():
+def get_rag_now_dict():
     data = read_rag_name_dict(rag_list_config_path)
     inverted_dict = {value: key for key, value in data.items()}
-    rag_deal_list = list(inverted_dict.keys())
-    return rag_deal_list
+    return inverted_dict
 
 def deal_images_group(group_name, rag_files, progress=gr.Progress()):
 
@@ -87,12 +86,11 @@ def create_or_add_data_to_lancedb(rag_database_name, table_name, df):
 def new_files_rag(rag_files, group_name):
     if group_name == '':
         gr.Warning('请给群组起一个名字')
-        rag_deal_list = get_rag_now_list()
-        return gr.CheckboxGroup(choices=rag_deal_list, label="rag列表"), gr.Dropdown(choices=rag_deal_list, label="上下文知识")
+        rag_deal_dict = get_rag_now_dict()
+        return rag_deal_dict
     else:
         df, df_save_path, id = deal_images_group(group_name, rag_files)
         df = save_info_to_lancedb(df)
         create_or_add_data_to_lancedb(rag_database_name, id, df)
-        rag_deal_list = get_rag_now_list()
-        return gr.CheckboxGroup(choices=rag_deal_list, label="rag列表"), gr.Dropdown(choices=rag_deal_list,
-                                                                                     label="上下文知识")
+        rag_deal_dict = get_rag_now_dict()
+        return rag_deal_dict

@@ -10,6 +10,7 @@ from PIL import Image
 from docx import Document
 from local.rag.rag_model import load_bge_model_cached, load_model_cached
 from local.rag.util import save_rag_name_dict, read_rag_name_dict, write_rag_name_dict, save_rag_csv_name, save_info_to_lancedb, read_md_doc, split_by_heading
+from local.rag.docx_parser import RAGFlowDocxParser
 
 from config import conf_yaml
 rag_config = conf_yaml['rag']
@@ -172,8 +173,11 @@ def deal_docx(doc_path, progress=gr.Progress()):
     file_name = os.path.basename(doc_path)
     docx_file_name = os.path.splitext(file_name)[0]
     result_list = []
-    text_list = split_docx_into_chunks(doc_path)
-    for index, text in tqdm(enumerate(text_list), total=len(text_list)):
+    sections = split_docx_into_chunks(doc_path)
+    # parser = RAGFlowDocxParser()
+    # sections, tables = parser(doc_path)
+    # sections.extend(tables)
+    for index, text in tqdm(enumerate(sections), total=len(sections)):
         info = {}
         info['title'] = ''
         info['content'] = text
@@ -181,7 +185,7 @@ def deal_docx(doc_path, progress=gr.Progress()):
         info['vector'] = model_bge.encode(text, batch_size=1, max_length=8192)['dense_vecs'].tolist()
         info['file_from'] = file_name
         result_list.append(info)
-        progress(round((index + 1) / len(text_list), 2))
+        progress(round((index + 1) / len(sections), 2))
     result_df = pd.DataFrame(result_list)
     df_save_path = os.path.join(rag_data_csv_dir, docx_file_name + '.csv')
     result_df.to_csv(df_save_path, index=False, encoding='utf8')
@@ -205,8 +209,7 @@ def new_file_rag(rag_file):
         inverted_dict = save_data_to_lancedb(df, id)
     else:
         raise gr.Error('上传的文件后缀格式不支持')
-    rag_deal_list = list(inverted_dict.keys())
-    return gr.CheckboxGroup(choices=rag_deal_list, label="rag列表"), gr.Dropdown(choices=rag_deal_list, label="上下文知识")
+    return inverted_dict
 
 def drop_lancedb_table(table_name_list):
     db = lancedb.connect(rag_database_name)
@@ -225,8 +228,7 @@ def drop_lancedb_table(table_name_list):
             if os.path.exists(csv_drop_path):
                 os.remove(csv_drop_path)
     write_rag_name_dict(rag_list_config_path, data)
-    rag_deal_list = list(inverted_dict.keys())
-    return gr.CheckboxGroup(choices=rag_deal_list, label="rag列表"), gr.Dropdown(choices=rag_deal_list, label="上下文知识")
+    return inverted_dict
 
 def select_lancedb_table():
     data = read_rag_name_dict(rag_list_config_path)

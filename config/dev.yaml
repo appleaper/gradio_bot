@@ -1,5 +1,8 @@
 local_chat:
   model_dict:
+    deepseek:
+#      - 7B
+      - 1.5B
     qwen2.5:
       - 7B-Instruct
       - 7B-Instruct-AWQ
@@ -39,8 +42,23 @@ local_chat:
     llama3-8b: /home/pandas/snap/model/Llama3-8B-Chinese-Chat
     MiniCPM3-4B: /home/pandas/snap/model/MiniCPM3-4B
     StepfunOcr: /home/pandas/snap/model/stepfun-aiGOT-OCR2_0
+#    deepseek-7B: /home/pandas/snap/model/deepseek/deepseek_r1_distill_qwen_7b
+    deepseek-1.5B: /home/pandas/snap/model/deepseek/deepseek_r1_distill_qwen_1_5b
   max_history_len: 6
-  max_output_len: 2048
+  max_output_len: 4096
+  qwen_support:
+    - qwen2.5-7B-Instruct
+    - qwen2.5-7B-Instruct-AWQ
+    - qwen2.5-1.5-Instruct-Coder
+    - qwen2.5-7B-Coder
+    - qwen2-1.5B-Instruct
+    - qwen2-7B-Instruct-AWQ
+    - qwen2.5-3B-Instruct
+    - qwen2.5-0.5B-Instruct
+#    - deepseek-7B
+    - deepseek-1.5B
+
+
 
 rag:
   top_k: 10
@@ -50,6 +68,8 @@ rag:
   beg_model_path: '/home/pandas/snap/model/BAAIbge-m3'
   ocr_model_path: '/home/pandas/snap/model/stepfun-aiGOT-OCR2_0'
   rag_list_config_path: '/home/pandas/snap/code/RapidOcr/config/rag_list.json'
+  knowledge_base_info_save_path: '/home/pandas/snap/code/RapidOcr/config/knowledge_base_info.json'
+  trie_dir_path: '/home/pandas/snap/code/RapidOcr/data/res'
 
 ui_conf:
   default_system: 'You are a helpful assistant.'
@@ -83,6 +103,7 @@ video:
     office_lady: ol
     erotic: 情趣
     bunny_girl: 兔女郎
+    daily_clothes: 常服
   action:
     oral_sex: 口交
     breast_sex: 乳交
