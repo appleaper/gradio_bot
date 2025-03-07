@@ -132,7 +132,7 @@ def save_json_file(data, file_path):
         with open(file_path, 'w', encoding='utf-8') as file:
             # indent=4 用于美化输出，使 JSON 文件更易读
             json.dump(data, file, ensure_ascii=False, indent=4)
-        print(f"数据已成功保存到 {file_path}。")
+        #print(f"数据已成功保存到 {file_path}。")
     except Exception as e:
         print(f"保存数据到 {file_path} 时出现错误: {e}")
 

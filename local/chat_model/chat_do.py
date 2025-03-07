@@ -13,7 +13,7 @@ from local.local_api import load_model_cached
 from threading import Thread
 from transformers import TextIteratorStreamer
 from local.embedding_model.embedding_init import load_rag_model
-from util.tool import read_json_file
+from utils.tool import read_json_file
 import pandas as pd
 
 rag_list_config_path = conf_yaml['rag']['rag_list_config_path']

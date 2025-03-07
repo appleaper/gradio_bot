@@ -1,23 +1,31 @@
+import lancedb
 import os
 import uuid
 import json
-import lancedb
-import pandas as pd
 import gradio as gr
 from tqdm import tqdm
-from local.rag.util import save_info_to_lancedb, read_rag_name_dict
-from local.rag.rag_model import load_model_cached, load_bge_model_cached
+import pandas as pd
 from config import conf_yaml
+from local.rag.parse.pdf_parse import parse_pdf_do
+from local.rag.parse.csv_parse import parse_csv_do
+from local.rag.parse.markdown_parse import parse_markdown_do
+from local.rag.parse.docx_parser import parse_docx_do
+from local.rag.parse.image_parse import deal_images_group
+from local.rag.util import read_rag_name_dict
 
 rag_config = conf_yaml['rag']
-rag_top_k = rag_config['top_k']
-rag_ocr_model_path = rag_config['ocr_model_path']
-rag_data_csv_dir = rag_config['rag_data_csv_dir']
-bge_model_path = rag_config['beg_model_path']
 rag_database_name = rag_config['rag_database_name']
 rag_list_config_path = rag_config['rag_list_config_path']
+rag_data_csv_dir = rag_config['rag_data_csv_dir']
+
+
+def get_rag_now_dict(data):
+    '''id和文章名字相反'''
+    inverted_dict = {value: key for key, value in data.items()}
+    return inverted_dict
 
 def save_rag_group_name(group_name, history_rag_dict, rag_list_config_path):
+    '''给组名返回一个唯一的id'''
     if group_name not in history_rag_dict.values():
         id = str(uuid.uuid4())[:8]
         history_rag_dict[id] = group_name
@@ -41,34 +49,6 @@ def save_rag_group_csv_name(df2, rag_data_csv_dir, id, rag_list_config_path):
         df2.to_csv(save_path, index=False, encoding='utf8')
     return save_path
 
-def get_rag_now_dict():
-    data = read_rag_name_dict(rag_list_config_path)
-    inverted_dict = {value: key for key, value in data.items()}
-    return inverted_dict
-
-def deal_images_group(group_name, rag_files, progress=gr.Progress()):
-
-    info_list = []
-    model, tokenizer = load_model_cached(rag_ocr_model_path)
-    model_bge = load_bge_model_cached(bge_model_path)
-    for index, file_name in tqdm(enumerate(rag_files), total=len(rag_files)):
-        upload_file, suffix = os.path.splitext(os.path.basename(file_name))
-        if suffix in ['.jpg', '.jpeg', '.png']:
-            ocr_result = model.chat(tokenizer, file_name, ocr_type='format')
-            info = {}
-            info['title'] = ''
-            info['content'] = ocr_result
-            info['page_count'] = ''
-            info['vector'] = model_bge.encode(ocr_result, batch_size=1, max_length=8192)['dense_vecs'].tolist()
-            info['file_from'] = upload_file + suffix
-            info_list.append(info)
-        progress(round((index + 1) / len(rag_files), 2))
-    df = pd.DataFrame(info_list)
-    data = read_rag_name_dict(rag_list_config_path)
-    id = save_rag_group_name(group_name, data, rag_list_config_path)
-    df_save_path = save_rag_group_csv_name(df, rag_data_csv_dir, id, rag_list_config_path)
-    return df, df_save_path, id
-
 def create_or_add_data_to_lancedb(rag_database_name, table_name, df):
     db = lancedb.connect(rag_database_name)
     table_path = os.path.join(rag_database_name, table_name + '.lance')
@@ -82,15 +62,30 @@ def create_or_add_data_to_lancedb(rag_database_name, table_name, df):
         tb.add(data=df)
         now_count = tb.count_rows()
         gr.Info(f'写入{now_count - old_count}条记录, 现有{now_count}条记录')
-
-def new_files_rag(rag_files, group_name):
-    if group_name == '':
-        gr.Warning('请给群组起一个名字')
-        rag_deal_dict = get_rag_now_dict()
-        return rag_deal_dict
-    else:
-        df, df_save_path, id = deal_images_group(group_name, rag_files)
-        df = save_info_to_lancedb(df)
+def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, progress=gr.Progress()):
+    if knowledge_name == '':
+        knowledge_name = os.path.basename(rag_upload_files[0])
+    data = read_rag_name_dict(rag_list_config_path)
+    id = save_rag_group_name(knowledge_name, data, rag_list_config_path)
+    for file_index, file_name in tqdm(enumerate(rag_upload_files), total=len(rag_upload_files)):
+        upload_file, suffix = os.path.splitext(os.path.basename(file_name))
+        if suffix == '.pdf':
+            df = parse_pdf_do(file_name)
+        elif suffix == '.csv':
+            df = parse_csv_do(file_name)
+        elif suffix == '.md':
+            df = parse_markdown_do(file_name)
+        elif suffix == '.docx':
+            df = parse_docx_do(file_name)
+        elif suffix in ['.jpg', '.jpeg', '.png']:
+            df = deal_images_group(file_name)
+        else:
+            gr.Warning(f'{os.path.basename(file_name)}不支持解析')
+            continue
+        if is_same_group == '否' and file_index!=0:
+            data = read_rag_name_dict(rag_list_config_path)
+            id = save_rag_group_name(os.path.basename(file_name), data, rag_list_config_path)
         create_or_add_data_to_lancedb(rag_database_name, id, df)
-        rag_deal_dict = get_rag_now_dict()
-        return rag_deal_dict
+        save_rag_group_csv_name(df, rag_data_csv_dir, id, rag_list_config_path)
+        progress(round((file_index + 1) / len(rag_upload_files), 2))
+    return get_rag_now_dict(data), None, None, []

@@ -7,19 +7,6 @@ import pandas as pd
 from tqdm import tqdm
 from datetime import datetime
 
-def save_info_to_lancedb(df):
-    result_list = []
-    for index, row in tqdm(df.iterrows(), total=len(df)):
-        info = {}
-        info['page_count'] = row.page_count
-        info['file_from'] = row.file_from
-        info['title'] = row.title
-        info['content'] = row.content
-        info['vector'] = np.array(row.vector)
-        result_list.append(info)
-    df_out = pd.DataFrame(result_list)
-    return df_out
-
 def get_keys_from_value(dictionary, value):
     return [key for key, val in dictionary.items() if val == value]
 

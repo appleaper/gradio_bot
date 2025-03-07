@@ -6,11 +6,11 @@ from video.cut_video import video_cut
 from ocr.ocr_model_select import get_result_image
 from config import conf_yaml
 from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
-from util.plot_data import create_pie_chart
-from local.rag.pdf_rag import new_file_rag, drop_lancedb_table
-from local.rag.image_group_rag import new_files_rag
+from utils.plot_data import create_pie_chart
+from local.rag.pdf_rag import drop_lancedb_table
+from local.rag.deal_many_file import deal_mang_knowledge_files
 from local.rag.util import read_rag_name_dict, read_md_doc
-from util.tool import read_json_file, save_json_file
+from utils.tool import read_json_file, save_json_file
 
 default_system = conf_yaml['ui_conf']['default_system']
 local_dict = conf_yaml['local_chat']['model_dict']
@@ -125,37 +125,23 @@ with gr.Blocks() as demo:
                 rag_list_value_gradio.value = read_rag_name_dict(rag_list_config_path)
                 with gr.Row():
                     rag_checkboxgroup = gr.CheckboxGroup(choices=list(rag_list_value_gradio.value.values()), label="rag列表")
+
                 with gr.Row():
                     with gr.Column(scale=1):
                         rag_delete_button = gr.Button(value='删除')
-                    rag_delete_button.click(
-                        drop_lancedb_table,
-                        inputs=rag_checkboxgroup,
-                        outputs=rag_list_value_gradio
-                    )
-
                 with gr.Row():
-                    rag_upload_file = gr.File(label='上传一个文件，支持pdf,csv,md,jpg,docx格式')
-                    rag_upload_file.upload(
-                        new_file_rag,
-                        inputs=rag_upload_file,
-                        outputs=rag_list_value_gradio
-                    )
-                with gr.Row():
-                    upload_files_group_name = gr.Textbox(label='组名', placeholder='给群组起一个名字')
-                with gr.Row():
-                    rag_submit_files_button = gr.Button(value='开始解析')
-                with gr.Row():
-                    rag_upload_files = gr.Files(label='上传多张图片，支持png,jpg,jpeg格式')
-
+                    with gr.Column(scale=1):
+                        is_same_group = gr.Radio(["是", "否"], label="是否为同一个组", info='若选是，则多个文章视为一篇文章，否则将视为多篇文章')
+                    with gr.Column(scale=4):
+                        knowledge_name = gr.Textbox(lines=1, label='文章名字',
+                                                    placeholder='给文章起个名字吧，不起的话，默认为上传的第一个文件的名字')
+                rag_upload_file = gr.Files(label='上传文件，支持pdf,csv,md,jpg,docx格式')
+                rag_submit_files_button = gr.Button(value='开始解析')
                 rag_submit_files_button.click(
-                    new_files_rag,
-                    inputs=[rag_upload_files, upload_files_group_name],
-                    outputs=rag_list_value_gradio
+                    deal_mang_knowledge_files,
+                    inputs=[rag_upload_file, is_same_group, knowledge_name],
+                    outputs=[rag_list_value_gradio, is_same_group, knowledge_name, rag_upload_file]
                 )
-
-
-
 
             with gr.TabItem('知识库'):
                 knowledge_base_info_dict = {}
@@ -192,6 +178,11 @@ with gr.Blocks() as demo:
                     inputs=[selectable_knowledge_bases_checkbox_group],
                     outputs=[selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table,
                              existing_knowledge_bases_state]
+                )
+                rag_delete_button.click(
+                    drop_lancedb_table,
+                    inputs=rag_checkboxgroup,
+                    outputs=[rag_list_value_gradio,knowledge_base_info_json_table]
                 )
 
                 @knowledge_base_info_json_table.change(inputs=knowledge_base_info_json_table,
