@@ -7,8 +7,7 @@ from ocr.ocr_model_select import get_result_image
 from config import conf_yaml
 from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
 from utils.plot_data import create_pie_chart
-from local.rag.pdf_rag import drop_lancedb_table
-from local.rag.deal_many_file import deal_mang_knowledge_files
+from local.rag.deal_many_file import deal_mang_knowledge_files, drop_lancedb_table
 from local.rag.util import read_rag_name_dict, read_md_doc
 from utils.tool import read_json_file, save_json_file
 
@@ -135,7 +134,7 @@ with gr.Blocks() as demo:
                     with gr.Column(scale=4):
                         knowledge_name = gr.Textbox(lines=1, label='文章名字',
                                                     placeholder='给文章起个名字吧，不起的话，默认为上传的第一个文件的名字')
-                rag_upload_file = gr.Files(label='上传文件，支持pdf,csv,md,jpg,docx格式')
+                rag_upload_file = gr.Files(label='上传文件，支持pdf,csv,md,jpg,docx格式，上传csv必须含title和content这两列。而且代码只解析这两列。')
                 rag_submit_files_button = gr.Button(value='开始解析')
                 rag_submit_files_button.click(
                     deal_mang_knowledge_files,
@@ -193,7 +192,7 @@ with gr.Blocks() as demo:
                 @rag_list_value_gradio.change(inputs=rag_list_value_gradio,
                                                        outputs=[rag_checkboxgroup, selectable_documents_checkbox_group])
                 def update_selectable_knowledge_bases(input_value):
-                    return gr.CheckboxGroup(choices=list(input_value.keys()), label="rag列表"), gr.CheckboxGroup(choices=list(input_value.keys()), label='可选文章')
+                    return gr.CheckboxGroup(choices=list(input_value.keys()), label="rag管理"), gr.CheckboxGroup(choices=list(input_value.keys()), label='可选文章')
 
             with gr.TabItem('ToDo'):
                 need_to_do_string = read_md_doc('./readme.md')

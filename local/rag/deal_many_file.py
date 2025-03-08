@@ -1,7 +1,8 @@
-import lancedb
 import os
+import copy
 import uuid
 import json
+import lancedb
 import gradio as gr
 from tqdm import tqdm
 import pandas as pd
@@ -10,14 +11,16 @@ from local.rag.parse.pdf_parse import parse_pdf_do
 from local.rag.parse.csv_parse import parse_csv_do
 from local.rag.parse.markdown_parse import parse_markdown_do
 from local.rag.parse.docx_parser import parse_docx_do
-from local.rag.parse.image_parse import deal_images_group
-from local.rag.util import read_rag_name_dict
+from local.rag.parse.image_parse import parse_image_do
+from utils.tool import read_json_file, save_json_file
+from local.rag.util import read_rag_name_dict, write_rag_name_dict
+
 
 rag_config = conf_yaml['rag']
 rag_database_name = rag_config['rag_database_name']
 rag_list_config_path = rag_config['rag_list_config_path']
 rag_data_csv_dir = rag_config['rag_data_csv_dir']
-
+knowledge_base_info_save_path = rag_config['knowledge_base_info_save_path']
 
 def get_rag_now_dict(data):
     '''id和文章名字相反'''
@@ -65,27 +68,68 @@ def create_or_add_data_to_lancedb(rag_database_name, table_name, df):
 def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, progress=gr.Progress()):
     if knowledge_name == '':
         knowledge_name = os.path.basename(rag_upload_files[0])
+        article_name, file_suffix = os.path.splitext(knowledge_name)
+    else:
+        article_name = knowledge_name
     data = read_rag_name_dict(rag_list_config_path)
-    id = save_rag_group_name(knowledge_name, data, rag_list_config_path)
+    id = save_rag_group_name(article_name, data, rag_list_config_path)
     for file_index, file_name in tqdm(enumerate(rag_upload_files), total=len(rag_upload_files)):
         upload_file, suffix = os.path.splitext(os.path.basename(file_name))
         if suffix == '.pdf':
             df = parse_pdf_do(file_name)
-        elif suffix == '.csv':
+        elif suffix in ['.csv', '.xlsx']:
             df = parse_csv_do(file_name)
         elif suffix == '.md':
             df = parse_markdown_do(file_name)
         elif suffix == '.docx':
             df = parse_docx_do(file_name)
         elif suffix in ['.jpg', '.jpeg', '.png']:
-            df = deal_images_group(file_name)
+            df = parse_image_do(file_name)
         else:
             gr.Warning(f'{os.path.basename(file_name)}不支持解析')
             continue
         if is_same_group == '否' and file_index!=0:
             data = read_rag_name_dict(rag_list_config_path)
-            id = save_rag_group_name(os.path.basename(file_name), data, rag_list_config_path)
+            article_name, article_suffix = os.path.splitext(os.path.basename(file_name))
+            id = save_rag_group_name(article_name, data, rag_list_config_path)
         create_or_add_data_to_lancedb(rag_database_name, id, df)
         save_rag_group_csv_name(df, rag_data_csv_dir, id, rag_list_config_path)
         progress(round((file_index + 1) / len(rag_upload_files), 2))
     return get_rag_now_dict(data), None, None, []
+
+
+def drop_lancedb_table(table_name_list):
+    '''删除文章'''
+    db = lancedb.connect(rag_database_name)
+    data = read_rag_name_dict(rag_list_config_path)
+    inverted_dict = {value: key for key, value in data.items()}
+
+    knowledge_json = read_json_file(knowledge_base_info_save_path)
+    for table_name in table_name_list:
+        if table_name in inverted_dict:
+            table_path = os.path.join(rag_database_name, inverted_dict[table_name] + '.lance')
+            if os.path.exists(table_path):
+                db.drop_table(inverted_dict[table_name])
+                del data[inverted_dict[table_name]]
+                del inverted_dict[table_name]
+                gr.Info(f'成功删除{table_name}')
+            else:
+                del data[inverted_dict[table_name]]
+                del inverted_dict[table_name]
+                gr.Warning(f'数据不存在，但依旧执行删除')
+            csv_drop_path = os.path.join(rag_data_csv_dir, table_name + '.csv')
+            if os.path.exists(csv_drop_path):
+                os.remove(csv_drop_path)
+
+    knowledge_json_copy = copy.deepcopy(knowledge_json)
+    for key in list(knowledge_json.keys()):
+        value_list = knowledge_json[key]
+        for element_to_remove in table_name_list:
+            while element_to_remove in value_list:
+                value_list.remove(element_to_remove)
+        if not value_list:
+            # 如果列表为空，删除该键值对
+            del knowledge_json_copy[key]
+    save_json_file(knowledge_json_copy, knowledge_base_info_save_path)
+    write_rag_name_dict(rag_list_config_path, data)
+    return inverted_dict, knowledge_json_copy

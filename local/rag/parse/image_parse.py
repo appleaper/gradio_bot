@@ -9,7 +9,7 @@ rag_ocr_model_path = rag_config['ocr_model_path']
 rag_list_config_path = rag_config['rag_list_config_path']
 
 
-def deal_images_group(file_name):
+def parse_image_do(file_name):
     info_list = []
     model, tokenizer = load_model_cached(rag_ocr_model_path)
     model_bge = load_bge_model_cached(bge_model_path)
