@@ -70,6 +70,9 @@ rag:
   rag_list_config_path: '/home/pandas/snap/code/RapidOcr/config/rag_list.json'
   knowledge_base_info_save_path: '/home/pandas/snap/code/RapidOcr/config/knowledge_base_info.json'
   trie_dir_path: '/home/pandas/snap/code/RapidOcr/data/res'
+  tmp_dir_path: '/home/pandas/snap/code/RapidOcr/tmp'
+  voice_model_path: '/home/pandas/snap/model/FireRedASR-AED-L'
+  voice_chunk_size: 1024
 
 ui_conf:
   default_system: 'You are a helpful assistant.'

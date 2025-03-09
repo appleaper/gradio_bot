@@ -12,6 +12,7 @@ from local.rag.parse.csv_parse import parse_csv_do
 from local.rag.parse.markdown_parse import parse_markdown_do
 from local.rag.parse.docx_parser import parse_docx_do
 from local.rag.parse.image_parse import parse_image_do
+from local.rag.parse.voice_parse import parse_voice_do
 from utils.tool import read_json_file, save_json_file
 from local.rag.util import read_rag_name_dict, write_rag_name_dict
 
@@ -85,6 +86,8 @@ def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, p
             df = parse_docx_do(file_name)
         elif suffix in ['.jpg', '.jpeg', '.png']:
             df = parse_image_do(file_name)
+        elif suffix == '.mp3':
+            df = parse_voice_do(file_name)
         else:
             gr.Warning(f'{os.path.basename(file_name)}不支持解析')
             continue
