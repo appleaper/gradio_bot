@@ -3,7 +3,7 @@ import functools
 import gradio as gr
 from config import conf_yaml
 from ocr.ocr_show import ocr_detect
-from rapidocr_onnxruntime import RapidOCR
+# from rapidocr_onnxruntime import RapidOCR
 from PIL import Image, ImageDraw, ImageFont
 from transformers import AutoModel, AutoTokenizer
 
@@ -23,10 +23,10 @@ def cached_model_loader(func):
     return wrapper
 
 def load_model(model_name):
-    if model_name == 'RapidOCR':
-        model = RapidOCR()
-        return model, ''
-    elif model_name == 'StepfunOcr':
+    # if model_name == 'RapidOCR':
+    #     model = RapidOCR()
+    #     return model, ''
+    if model_name == 'StepfunOcr':
         model_path = name2path['StepfunOcr']
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         model = AutoModel.from_pretrained(model_path, trust_remote_code=True, low_cpu_mem_usage=True, device_map='cuda',

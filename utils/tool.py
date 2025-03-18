@@ -1,17 +1,24 @@
-import os.path
+import os
 import re
+import uuid
+import json
+import hashlib
 import pandas as pd
 import pickle as pkl
-import json
+
 
 def load_html_file(filepath):
+    '''读取htmml文件'''
     with open(filepath, "r", encoding="utf-8") as file:
         html_content = file.read()
     return html_content
 
 def add_hash(match):
+    '''添加hash'''
     return '# ' + match.group(1)
+
 def csv2markdown(csv_path, book_path):
+    '''csv转markdown格式'''
     df = pd.read_csv(csv_path)
     out_str_list = []
     pattern = r'(第[零一二三四五六七八九十百千万]+章)'
@@ -51,6 +58,7 @@ def csv2markdown(csv_path, book_path):
         f.writelines(out_str_list)
 
 def parse_md_file(file_path):
+    '''解析markdown文件'''
     result = []
     title = None
     content = []
@@ -135,6 +143,42 @@ def save_json_file(data, file_path):
         #print(f"数据已成功保存到 {file_path}。")
     except Exception as e:
         print(f"保存数据到 {file_path} 时出现错误: {e}")
+
+def encrypt_username(username):
+    # 对用户名进行加密
+    hash_object = hashlib.sha256(username.encode('utf-8'))
+    hex_dig = hash_object.hexdigest()
+    # 截取前 8 位作为加密后的用户名
+    encrypted_username = hex_dig[:8]
+    return encrypted_username
+
+def save_rag_group_name(user_name, articles_name, articles_user_mapping_dict, mapping_json_path):
+    '''给组名返回一个唯一的id'''
+    user_info = articles_user_mapping_dict[user_name]
+    if articles_name not in user_info.values():
+        id = str(uuid.uuid4())[:8]
+        user_info[id] = articles_name
+    else:
+        id_list = [key for key, value in user_info.items() if value == articles_name]
+        id = id_list[0]
+    articles_user_mapping_dict[user_name] = user_info
+    save_json_file(articles_user_mapping_dict, mapping_json_path)
+    return id
+
+def reverse_dict(data):
+    '''id和文章名字相反'''
+    inverted_dict = {value: key for key, value in data.items()}
+    return inverted_dict
+
+def read_user_info_dict(user_name, path):
+    with open(path, 'r', encoding='utf8') as json_file:
+        json_dict = json.load(json_file)
+    return json_dict[user_name]
+
+def read_md_doc(path):
+    with open(path, 'r', encoding='utf-8') as file:
+        content = file.read()
+    return content
 
 if __name__ == '__main__':
     csv_path = '/home/pandas/snap/code/RapidOcr/database_data/rag/data_csv/中国历代政治得失分块版.csv.csv'

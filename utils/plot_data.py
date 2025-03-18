@@ -1,8 +1,9 @@
 import GPUtil
+from config import conf_yaml
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 
-font_path = '/home/pandas/snap/code/RapidOcr/ocr/font/SimHei.ttf'  # 替换为你的simhei.ttf文件的实际路径
+font_path = conf_yaml['ocr']['font_path']  # 替换为你的simhei.ttf文件的实际路径
 font_prop = FontProperties(fname=font_path)
 def get_gpu_memory_info():
     gpus = GPUtil.getGPUs()

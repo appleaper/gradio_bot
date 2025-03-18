@@ -1,16 +1,13 @@
 import os
+import hashlib
 import gradio as gr
 import pandas as pd
 from tqdm import  tqdm
-from config import conf_yaml
 from local.rag.rag_model import load_bge_model_cached
+from utils.config_init import bge_model_path
 
-rag_config = conf_yaml['rag']
-bge_model_path = rag_config['beg_model_path']
-rag_data_csv_dir = rag_config['rag_data_csv_dir']
-rag_list_config_path = rag_config['rag_list_config_path']
 
-def parse_csv_do(csv_path):
+def parse_csv_do(csv_path, id, user_id):
     file_name, suffix = os.path.splitext(os.path.basename(csv_path))
     if suffix == '.csv':
         try:
@@ -34,11 +31,14 @@ def parse_csv_do(csv_path):
         for index, row in tqdm(df.iterrows(), total=len(df)):
             info = {}
             input_str = f'标题/提问：{row.title}\n正文/回答:{row.content}\n'
+            info['user_id'] = user_id
+            info['article_id'] = id
             info['title'] = row['title']
             info['content'] = row['content']
-            info['page_count'] = index+1
+            info['page_count'] = str(index+1)
             info['vector'] = model_bge.encode(input_str, batch_size=1, max_length=8192)['dense_vecs'].tolist()
             info['file_from'] = file_name
+            info['hash_check'] = hashlib.sha256((user_id+id+row['title']+row['content']).encode('utf-8')).hexdigest()
             result_list.append(info)
         result_df = pd.DataFrame(result_list)
         return result_df

@@ -1,7 +1,0 @@
-successful	/media/pandas/video/video/temp1/非高跟/Screenrecorder-2023-03-03-06-50-00-76.mp4	/home/pandas/snap/cur_video/Screenrecorder-2023-03-03-06-50-00-7600_05__to__00_09.mp4
-successful	/media/pandas/video/video/temp1/非高跟/DnO3KXAKVWXI.mp4	/home/pandas/snap/cur_video/DnO3KXAKVWXI00_00__to__00_01.mp4
-successful	/media/pandas/video/video/temp1/整片/正在觀看：8P合コン仲良し4人組JDヤリマン陽キャビッチアフターピル-秘密仓库.mp4	/home/pandas/snap/cur_video/正在觀看：8P合コン仲良し4人組JDヤリマン陽キャビッチアフターピル-秘密仓库00_00__to__01_007.mp4
-successful	/media/pandas/video/video/temp1/整片/正在觀看：8P合コン仲良し4人組JDヤリマン陽キャビッチアフターピル-秘密仓库.mp4	/home/pandas/snap/cur_video/正在觀看：8P合コン仲良し4人組JDヤリマン陽キャビッチアフターピル-秘密仓库01_007__to__01_49.mp4
-successful	/media/pandas/video/video/temp/站立后入/Screenrecorder-2021-07-15-05-54-01-587.mp4	/media/pandas/video/video/cur_video/Screenrecorder-2021-07-15-05-54-01-58700_00__to__00_01.mp4
-successful	/media/pandas/video/video/temp/站立后入/Screenrecorder-2022-10-02-06-13-03-765.mp4	/media/pandas/video/video/cur_video/Screenrecorder-2022-10-02-06-13-03-76500_00__to__00_04.mp4
-successful	/media/pandas/video/video/temp/站立后入/Screenrecorder-2022-10-02-06-13-03-765.mp4	/media/pandas/video/video/cur_video/Screenrecorder-2022-10-02-06-13-03-76500_04__to__00_06.mp4

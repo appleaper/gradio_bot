@@ -1,12 +1,7 @@
 import os
-import copy
-import uuid
-import json
-import lancedb
 import gradio as gr
 from tqdm import tqdm
 import pandas as pd
-from config import conf_yaml
 from local.rag.parse.pdf_parse import parse_pdf_do
 from local.rag.parse.csv_parse import parse_csv_do
 from local.rag.parse.markdown_parse import parse_markdown_do
@@ -14,128 +9,115 @@ from local.rag.parse.docx_parser import parse_docx_do
 from local.rag.parse.image_parse import parse_image_do
 from local.rag.parse.voice_parse import parse_voice_do
 from local.rag.parse.video_parse import parse_video_do
-from utils.tool import read_json_file, save_json_file
-from local.rag.util import read_rag_name_dict, write_rag_name_dict
+from utils.tool import encrypt_username, save_rag_group_name, reverse_dict, read_user_info_dict, save_json_file, read_json_file
+from local.database.lancedb.data_to_lancedb import create_or_add_data_to_lancedb, drop_lancedb_table
+from local.database.milvus.milvus_article_management import MilvusArticleManager
+from utils.config_init import rag_data_csv_dir, database_dir, articles_user_path, kb_article_map_path, database_type
 
 
-rag_config = conf_yaml['rag']
-rag_database_name = rag_config['rag_database_name']
-rag_list_config_path = rag_config['rag_list_config_path']
-rag_data_csv_dir = rag_config['rag_data_csv_dir']
-knowledge_base_info_save_path = rag_config['knowledge_base_info_save_path']
-
-def get_rag_now_dict(data):
-    '''id和文章名字相反'''
-    inverted_dict = {value: key for key, value in data.items()}
-    return inverted_dict
-
-def save_rag_group_name(group_name, history_rag_dict, rag_list_config_path):
-    '''给组名返回一个唯一的id'''
-    if group_name not in history_rag_dict.values():
-        id = str(uuid.uuid4())[:8]
-        history_rag_dict[id] = group_name
-    else:
-        id_list = [key for key, value in history_rag_dict.items() if value == group_name]
-        id = id_list[0]
-    with open(rag_list_config_path, 'w', encoding='utf8') as json_file:
-        json.dump(history_rag_dict, json_file, indent=4, ensure_ascii=False)  # 使用indent参数美化输出
-    return id
-
-def save_rag_group_csv_name(df2, rag_data_csv_dir, id, rag_list_config_path):
-    history_rag_dict = read_rag_name_dict(rag_list_config_path)
+def save_rag_group_csv_name(df2, rag_data_csv_dir, id, rag_list_config_path, user_name):
+    history_rag_dict = read_user_info_dict(user_name, rag_list_config_path)
     csv_name = history_rag_dict[id]
-    save_path = os.path.join(rag_data_csv_dir, csv_name + '.csv')
+    save_path = os.path.join(rag_data_csv_dir, user_name, csv_name + '.csv')
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
     if os.path.exists(save_path):
         df1 = pd.read_csv(save_path, encoding='utf8')
         df2 = pd.concat([df1, df2], ignore_index=True)
-        df2 = df2.drop_duplicates(subset=['title','content','page_count','file_from'])
+        df2 = df2.drop_duplicates(subset=['hash_check'])
         df2.to_csv(save_path, index=False, encoding='utf8')
     else:
         df2.to_csv(save_path, index=False, encoding='utf8')
     return save_path
 
-def create_or_add_data_to_lancedb(rag_database_name, table_name, df):
-    db = lancedb.connect(rag_database_name)
-    table_path = os.path.join(rag_database_name, table_name + '.lance')
-    if not os.path.exists(table_path):
-        tb = db.create_table(table_name, data=df, exist_ok=True)
-        row_count = tb.count_rows()
-        gr.Info(f'创建新的数据表，并写入{row_count}条数据')
-    else:
-        tb = db.open_table(table_name)
-        old_count = tb.count_rows()
-        tb.add(data=df)
-        now_count = tb.count_rows()
-        gr.Info(f'写入{now_count - old_count}条记录, 现有{now_count}条记录')
-def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, progress=gr.Progress()):
+
+
+def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, request: gr.Request, progress=gr.Progress()):
+    '''将各种格式的东西转为embbing并存入数据库中'''
+    user_name = request.username
+    user_id = encrypt_username(user_name)
+
     if knowledge_name == '':
         knowledge_name = os.path.basename(rag_upload_files[0])
         article_name, file_suffix = os.path.splitext(knowledge_name)
     else:
         article_name = knowledge_name
-    data = read_rag_name_dict(rag_list_config_path)
-    id = save_rag_group_name(article_name, data, rag_list_config_path)
+    articles_user_mapping_dict = read_json_file(articles_user_path)
+    id = save_rag_group_name(user_name, article_name, articles_user_mapping_dict, articles_user_path)
+    if database_type=='milvus':
+        manager = MilvusArticleManager()
     for file_index, file_name in tqdm(enumerate(rag_upload_files), total=len(rag_upload_files)):
         upload_file, suffix = os.path.splitext(os.path.basename(file_name))
         if suffix == '.pdf':
-            df = parse_pdf_do(file_name)
+            df = parse_pdf_do(file_name, id, user_id)
         elif suffix in ['.csv', '.xlsx']:
-            df = parse_csv_do(file_name)
+            df = parse_csv_do(file_name, id, user_id)
         elif suffix == '.md':
-            df = parse_markdown_do(file_name)
-        elif suffix == '.docx':
-            df = parse_docx_do(file_name)
+            df = parse_markdown_do(file_name, id, user_id)
+        # elif suffix == '.docx':
+        #     df = parse_docx_do(file_name, id, user_id)
         elif suffix in ['.jpg', '.jpeg', '.png']:
-            df = parse_image_do(file_name)
+            df = parse_image_do(file_name, id, user_id)
         elif suffix == '.mp3':
-            df = parse_voice_do(file_name)
+            df = parse_voice_do(file_name, id, user_id)
         elif suffix == '.mp4':
-            df = parse_voice_do(file_name)
+            df = parse_video_do(file_name, id, user_id)
         else:
             gr.Warning(f'{os.path.basename(file_name)}不支持解析')
             continue
         if is_same_group == '否' and file_index!=0:
-            data = read_rag_name_dict(rag_list_config_path)
+            data = read_user_info_dict(user_name, articles_user_path)
             article_name, article_suffix = os.path.splitext(os.path.basename(file_name))
-            id = save_rag_group_name(article_name, data, rag_list_config_path)
-        create_or_add_data_to_lancedb(rag_database_name, id, df)
-        save_rag_group_csv_name(df, rag_data_csv_dir, id, rag_list_config_path)
+            id = save_rag_group_name(user_name, article_name, data, articles_user_path)
+
+        if database_type == 'lancedb':
+            save_df = create_or_add_data_to_lancedb(database_dir, id, df)
+        else:
+            manager.create_collection(user_id)
+            manager.insert_data_to_milvus(df, user_id)
+        save_rag_group_csv_name(save_df, rag_data_csv_dir, id, articles_user_path, user_name)
         progress(round((file_index + 1) / len(rag_upload_files), 2))
-    return get_rag_now_dict(data), None, None, []
+    return articles_user_mapping_dict[user_name], None, None, []
 
 
-def drop_lancedb_table(table_name_list):
-    '''删除文章'''
-    db = lancedb.connect(rag_database_name)
-    data = read_rag_name_dict(rag_list_config_path)
-    inverted_dict = {value: key for key, value in data.items()}
+def delete_article_from_database(need_detele_articles, all_articles_dict, request: gr.Request):
+    user_name = request.username
+    all_articles_dict, articles_user_mapping_dict = drop_lancedb_table(need_detele_articles, all_articles_dict, user_name)
+    return all_articles_dict, articles_user_mapping_dict
 
-    knowledge_json = read_json_file(knowledge_base_info_save_path)
-    for table_name in table_name_list:
-        if table_name in inverted_dict:
-            table_path = os.path.join(rag_database_name, inverted_dict[table_name] + '.lance')
-            if os.path.exists(table_path):
-                db.drop_table(inverted_dict[table_name])
-                del data[inverted_dict[table_name]]
-                del inverted_dict[table_name]
-                gr.Info(f'成功删除{table_name}')
-            else:
-                del data[inverted_dict[table_name]]
-                del inverted_dict[table_name]
-                gr.Warning(f'数据不存在，但依旧执行删除')
-            csv_drop_path = os.path.join(rag_data_csv_dir, table_name + '.csv')
-            if os.path.exists(csv_drop_path):
-                os.remove(csv_drop_path)
 
-    knowledge_json_copy = copy.deepcopy(knowledge_json)
-    for key in list(knowledge_json.keys()):
-        value_list = knowledge_json[key]
-        for element_to_remove in table_name_list:
-            while element_to_remove in value_list:
-                value_list.remove(element_to_remove)
-        if not value_list:
-            # 如果列表为空，删除该键值对
-            del knowledge_json_copy[key]
-    save_json_file(knowledge_json_copy, knowledge_base_info_save_path)
-    write_rag_name_dict(rag_list_config_path, data)
-    return inverted_dict, knowledge_json_copy
+def add_group_database(selected_documents_list, new_knowledge_base_name, request: gr.Request):
+    # 所有知识库的记录，键为知识库名，值为构成该知识库的文章名列表
+    user_name = request.username
+    if os.path.exists(kb_article_map_path):
+        # 若文件存在，加载知识库信息
+        all_knowledge_bases_record_with_user = read_json_file(kb_article_map_path)
+    else:
+        raise gr.Error(f'{kb_article_map_path} not exist!')
+    user_kb = all_knowledge_bases_record_with_user[user_name]
+    if len(new_knowledge_base_name) == 0:
+        gr.Warning('请输入新知识库的名字')
+        return selected_documents_list, '', user_kb, user_kb
+    else:
+        # 将新建的知识库信息添加到记录中
+        all_knowledge_bases_record_with_user[user_name][new_knowledge_base_name] = selected_documents_list
+        # 保存更新后的知识库信息
+        save_json_file(all_knowledge_bases_record_with_user, kb_article_map_path)
+        gr.Info('新建知识库成功')
+        return [], '', all_knowledge_bases_record_with_user[user_name], all_knowledge_bases_record_with_user[user_name]
+
+def delete_group_database(knowledge_bases_to_delete, request: gr.Request):
+    # 所有知识库的记录，键为知识库名，值为构成该知识库的文章名列表
+    user_name = request.username
+    if os.path.exists(kb_article_map_path):
+        # 若文件存在，加载知识库信息
+        all_knowledge_bases_record = read_json_file(kb_article_map_path)
+    else:
+        raise gr.Error(f'{kb_article_map_path} not exist')
+    # 遍历要删除的知识库名称列表，从记录中删除对应的知识库
+    for knowledge_base_name in knowledge_bases_to_delete:
+        if knowledge_base_name in all_knowledge_bases_record[user_name]:
+            del all_knowledge_bases_record[user_name][knowledge_base_name]
+    # 保存更新后的知识库信息
+    save_json_file(all_knowledge_bases_record, kb_article_map_path)
+    gr.Info('删除知识库成功')
+    return [], all_knowledge_bases_record[user_name], all_knowledge_bases_record[user_name]

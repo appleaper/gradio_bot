@@ -58,21 +58,36 @@ local_chat:
 #    - deepseek-7B
     - deepseek-1.5B
 
-
-
 rag:
+  database:
+    choise: 'lancedb'
+    lancedb:
+      save:
+        database_dir: '/home/pandas/snap/code/RapidOcr/data/database/lancedb/data'
+        articles_user_path: '/home/pandas/snap/code/RapidOcr/data/database/lancedb/user_article_mapping.json'
+        kb_article_map_path: '/home/pandas/snap/code/RapidOcr/data/database/lancedb/kb_article_mappping.json'
+    milvus:
+      save:
+        articles_user_path: '/home/pandas/snap/code/RapidOcr/data/database/milvus/user_article_mapping.json'
+        kb_article_map_path: '/home/pandas/snap/code/RapidOcr/data/database/milvus/kb_article_mappping.json'
+  embedding_mdoel:
+    bge_m3:
+      model_path: '/home/pandas/snap/model/BAAIbge-m3'
+  parse_voice:
+    model_path: '/home/pandas/snap/model/FireRedASR-AED-L'
+    voice_chunk_size: 1024
+  parse_image:
+    model_path: '/home/pandas/snap/model/stepfun-aiGOT-OCR2_0'
+  tokenizer:
+    trie_dir_path: '/home/pandas/snap/code/RapidOcr/data/res'
   top_k: 10
   max_rag_len: 10000
-  rag_database_name: '/home/pandas/snap/code/RapidOcr/database_data/rag/database'
   rag_data_csv_dir: '/home/pandas/snap/code/RapidOcr/database_data/rag/data_csv'
-  beg_model_path: '/home/pandas/snap/model/BAAIbge-m3'
-  ocr_model_path: '/home/pandas/snap/model/stepfun-aiGOT-OCR2_0'
-  rag_list_config_path: '/home/pandas/snap/code/RapidOcr/config/rag_list.json'
-  knowledge_base_info_save_path: '/home/pandas/snap/code/RapidOcr/config/knowledge_base_info.json'
-  trie_dir_path: '/home/pandas/snap/code/RapidOcr/data/res'
   tmp_dir_path: '/home/pandas/snap/code/RapidOcr/tmp'
-  voice_model_path: '/home/pandas/snap/model/FireRedASR-AED-L'
-  voice_chunk_size: 1024
+
+
+user:
+  user_password_info_dict_path: '/home/pandas/snap/code/RapidOcr/config/auth.json'
 
 ui_conf:
   default_system: 'You are a helpful assistant.'

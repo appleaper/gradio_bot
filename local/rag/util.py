@@ -40,15 +40,9 @@ def save_rag_csv_name(df, rag_data_csv_dir, id, rag_list_config_path):
 def write_rag_name_dict(path, rag_dict):
     with open(path, 'w', encoding='utf8') as json_file:
         json.dump(rag_dict, json_file, indent=4, ensure_ascii=False)  # 使用indent参数美化输出
-def read_rag_name_dict(path):
-    with open(path, 'r', encoding='utf8') as json_file:
-        json_dict = json.load(json_file)
-    return json_dict
 
-def read_md_doc(path):
-    with open(path, 'r', encoding='utf-8') as file:
-        content = file.read()
-    return content
+
+
 
 def split_by_heading(text, level=2):
     # 使用正则表达式匹配二级标题

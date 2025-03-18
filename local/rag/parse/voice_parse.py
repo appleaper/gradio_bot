@@ -1,16 +1,13 @@
 import os
+import hashlib
 import subprocess
 import pandas as pd
 from tqdm import tqdm
-from config import conf_yaml
 from local.rag.parse.fireredasr.models.fireredasr import FireRedAsr
-from local.rag.rag_model import load_model_cached, load_bge_model_cached
+from local.rag.rag_model import load_bge_model_cached
 
-rag_config = conf_yaml['rag']
-bge_model_path = rag_config['beg_model_path']
-tmp_dir_path = rag_config['tmp_dir_path']
-voice_model_path = rag_config['voice_model_path']
-voice_chunk_size = rag_config['voice_chunk_size']
+from utils.config_init import bge_model_path, tmp_dir_path, voice_model_path, voice_chunk_size
+
 def transcribe_audio(audio_path, model):
     """
     该方法用于对指定音频文件进行转录
@@ -119,7 +116,7 @@ def process_audio(input_mp3_file, output_folder, model):
 
     return voice_str
 
-def parse_voice_do(file_name):
+def parse_voice_do(file_name, id, user_id):
     '''对音频进行解析'''
     model = FireRedAsr.from_pretrained("aed", voice_model_path)
     model_bge = load_bge_model_cached(bge_model_path)
@@ -129,11 +126,14 @@ def parse_voice_do(file_name):
     for i in range(0, len(voice_str), voice_chunk_size):
         chunk = voice_str[i:i + voice_chunk_size]
         info = {}
+        info['user_id'] = user_id
+        info['article_id'] = id
         info['title'] = ''
         info['content'] = chunk
         info['page_count'] = ''
         info['vector'] = model_bge.encode(chunk, batch_size=1, max_length=8192)['dense_vecs'].tolist()
         info['file_from'] = os.path.basename(file_name)
+        info['hash_check'] = hashlib.sha256((user_id+id+chunk).encode('utf-8')).hexdigest()
         info_list.append(info)
 
     df = pd.DataFrame(info_list)

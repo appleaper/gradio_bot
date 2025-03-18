@@ -1,26 +1,21 @@
 import os
 import fitz
 import uuid
+import hashlib
 import pandas as pd
-import gradio as gr
 from tqdm import tqdm
 from PIL import Image
-from config import conf_yaml
 from local.rag.rag_model import load_bge_model_cached, load_model_cached
-from local.rag.util import save_rag_name_dict, save_rag_csv_name, read_rag_name_dict
+
+from utils.config_init import rag_ocr_model_path, bge_model_path
 
 
-rag_config = conf_yaml['rag']
-rag_ocr_model_path = rag_config['ocr_model_path']
-bge_model_path = rag_config['beg_model_path']
-rag_list_config_path = rag_config['rag_list_config_path']
-rag_data_csv_dir = rag_config['rag_data_csv_dir']
 
 def generate_unique_filename(extension='jpg'):
     unique_filename = str(uuid.uuid4()) + '.' + extension
     return unique_filename
 
-def parse_pdf_do(pdf_path):
+def parse_pdf_do(pdf_path, id, user_id):
     model_path = rag_ocr_model_path
     model, tokenizer = load_model_cached(model_path)
     # 打开PDF文件
@@ -44,11 +39,14 @@ def parse_pdf_do(pdf_path):
             # 删除文件
             os.remove(output_path)
         info = {}
-        info['page_count'] = page_num
+        info['user_id'] = user_id
+        info['article_id'] = id
+        info['page_count'] = str(page_num)
         info['file_from'] = pdf_path
         info['title'] = ''
         info['content'] = ocr_result
         info['vector'] = model_bge.encode(ocr_result, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        info['hash_check'] = hashlib.sha256((user_id+id+ocr_result).encode('utf-8')).hexdigest()
         info_list.append(info)
     df = pd.DataFrame(info_list)
     return df

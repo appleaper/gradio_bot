@@ -5,7 +5,7 @@ import torch
 import lancedb
 import gradio as gr
 from config import conf_yaml
-from local.rag.util import read_rag_name_dict
+# from local.rag.util import read_rag_name_dict
 from local.qwen.qwen_api import qwen_model_detect
 from local.llama3.llama3_api import llama3_model_detect
 from local.MiniCPM.minicpm_api import minicpm_model_detect
@@ -13,19 +13,13 @@ from local.local_api import load_model_cached
 from threading import Thread
 from transformers import TextIteratorStreamer
 from local.embedding_model.embedding_init import load_rag_model
-from utils.tool import read_json_file
-import pandas as pd
+from utils.tool import read_user_info_dict, reverse_dict
 
-rag_list_config_path = conf_yaml['rag']['rag_list_config_path']
-qwen_support_list = conf_yaml['local_chat']['qwen_support']
-bge_max_rag_len = conf_yaml['rag']['max_rag_len']
-max_history_len = conf_yaml['local_chat']['max_history_len']
-rag_database_name = conf_yaml['rag']['rag_database_name']
-rag_top_k = conf_yaml['rag']['top_k']
-knowledge_base_info_save_path = conf_yaml['rag']['knowledge_base_info_save_path']
+from utils.config_init import articles_user_path, kb_article_map_path, database_dir, \
+    rag_top_k, max_history_len, max_rag_len, qwen_support_list
 
 
-def add_rag_info(textbox, book_type, rag_model, database_name, top_k):
+def add_rag_info(textbox, book_type, rag_model, database_name, top_k, user_name):
     '''
     暂时去掉了模型审核内容是否相关的部分
     :param textbox: 用户提问
@@ -36,12 +30,12 @@ def add_rag_info(textbox, book_type, rag_model, database_name, top_k):
     :return: rag文字
     '''
     # model, tokenizer = load_model_cached('qwen2.5-0.5B-Instruct')
-    all_knowledge_bases_record = read_json_file(knowledge_base_info_save_path)
+    all_knowledge_bases_record = read_user_info_dict(user_name, kb_article_map_path)
+
     vector = rag_model.encode(textbox, batch_size=1, max_length=8192)['dense_vecs']
     db = lancedb.connect(database_name)
 
-    data = read_rag_name_dict(rag_list_config_path)
-    inverted_dict = {value: key for key, value in data.items()}
+    inverted_dict = reverse_dict(read_user_info_dict(user_name, articles_user_path))
 
     records_df = pd.DataFrame()
     for table_name in all_knowledge_bases_record[book_type]:
@@ -58,11 +52,11 @@ def add_rag_info(textbox, book_type, rag_model, database_name, top_k):
                    f'内容:{record["content"]}\n' \
                    f'来源:{os.path.basename(record["file_from"])}的第{record["page_count"]}页/行\n\n'
 
-        if now_str_count < bge_max_rag_len:
+        if now_str_count < max_rag_len:
             rag_str += rag_str_i
             now_str_count += len(rag_str_i)
         else:
-            rag_str += rag_str_i[:(bge_max_rag_len - now_str_count)]
+            rag_str += rag_str_i[:(max_rag_len - now_str_count)]
             break
 
         # messages = [
@@ -72,17 +66,17 @@ def add_rag_info(textbox, book_type, rag_model, database_name, top_k):
         # ]
         # response_message = qwen_model_detect(messages, model, tokenizer)
         # if response_message == '是':
-        #     if now_str_count < bge_max_rag_len:
+        #     if now_str_count < max_rag_len:
         #         rag_str += rag_str_i
         #         now_str_count += len(rag_str_i)
         #     else:
-        #         rag_str += rag_str_i[:(bge_max_rag_len - now_str_count)]
+        #         rag_str += rag_str_i[:(max_rag_len - now_str_count)]
         #         break
     print(rag_str)
     return rag_str
 
 
-def local_chat(textbox, show_history, system_state, history, model_type, parm_b, steam_check_box, book_type):
+def local_chat(textbox, show_history, system_state, history, model_type, parm_b, steam_check_box, book_type, request: gr.Request):
     '''
 
     :param textbox: 用户提问
@@ -95,6 +89,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     :param book_type: rag的名字
     :return:
     '''
+    user_name = request.username
     torch.cuda.empty_cache()
     model_name = model_type + '-' + parm_b
     model, tokenizer = load_model_cached(model_name)
@@ -102,7 +97,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
         rag_str = '无'
     else:
         rag_model, rag_tokenizer = load_rag_model('bge_m3')
-        rag_str = add_rag_info(textbox, book_type, rag_model, rag_database_name, rag_top_k)
+        rag_str = add_rag_info(textbox, book_type, rag_model, database_dir, rag_top_k, user_name)
     if show_history is None:
         history = []
     if len(history) == 0:
