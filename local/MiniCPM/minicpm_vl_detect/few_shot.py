@@ -1,6 +1,6 @@
 import gradio as gr
 from PIL import Image
-from local.MiniCPM.minicpm_vl_detect.utils import encode_image, make_text
+from local.MiniCPM.minicpm_vl_detect.utils_tool import encode_image, make_text
 
 def fewshot_add_demonstration(_image, _user_message, _assistant_message, _chat_bot, _app_cfg):
     ctx = _app_cfg["ctx"]

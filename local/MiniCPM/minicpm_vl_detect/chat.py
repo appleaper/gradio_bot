@@ -11,8 +11,9 @@ import modelscope_studio as mgr
 from decord import VideoReader, cpu
 from transformers import AutoModel, AutoTokenizer
 
-from local.MiniCPM.minicpm_vl_detect.utils import encode_image, make_text, init_conversation, clear, create_multimodal_input, flushed, regenerate_button_clicked, check_mm_type, request
+from local.MiniCPM.minicpm_vl_detect.utils_tool import encode_image, make_text, init_conversation, clear, create_multimodal_input, flushed, regenerate_button_clicked, check_mm_type, request
 from local.MiniCPM.minicpm_vl_detect.few_shot import fewshot_add_demonstration, fewshot_request, select_chat_type
+from utils.config_init import multimodal_model_path
 
 model_name = 'MiniCPM-V 2.6'
 introduction = """
@@ -36,7 +37,7 @@ form_radio = {
 ERROR_MSG = "发生错误，请重试"
 MAX_NUM_FRAMES = 64
 
-ModelPath = '/home/pandas/snap/model/openbmbMiniCPM-V-2_6-int4'
+ModelPath = multimodal_model_path
 def load_model(model_path):
     model = AutoModel.from_pretrained(model_path, trust_remote_code=True)
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)

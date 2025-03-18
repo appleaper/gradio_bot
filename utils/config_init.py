@@ -21,6 +21,8 @@ lancedb_kb_article_map_path = conf_yaml['rag']['database']['lancedb']['save']['k
 milvus_articles_user_path = conf_yaml['rag']['database']['milvus']['save']['articles_user_path']
 milvus_kb_article_map_path = conf_yaml['rag']['database']['milvus']['save']['kb_article_map_path']
 database_type = conf_yaml['rag']['database']['choise']
+
+multimodal_model_path = conf_yaml['local_chat']['multimodal']['model_path']
 def get_database_config():
     '''根据数据库进行初始化配置'''
     if database_type == 'lancedb':

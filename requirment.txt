@@ -14,11 +14,13 @@ cn2an==0.5.23
 peft==0.14.0
 sentencepiece==0.2.0
 pymilvus==2.5.5
+# 下面这些是为多模态准备的
 torchvision=0.19.1
 http://thunlp.oss-cn-qingdao.aliyuncs.com/multi_modal/never_delete/modelscope_studio-0.4.0.9-py3-none-any.whl
+bitsandbytes==0.43.2
 
+
+# 下面这些暂时没用
 matplotlib
 tiktoken
 verovio
-autoawq
-bitsandbytes
