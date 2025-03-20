@@ -4,7 +4,7 @@ import gradio as gr
 import pandas as pd
 from tqdm import  tqdm
 from local.rag.rag_model import load_bge_model_cached
-from utils.config_init import bge_model_path
+from utils.config_init import bge_m3_model_path
 
 
 def parse_csv_do(csv_path, id, user_id):
@@ -24,7 +24,7 @@ def parse_csv_do(csv_path, id, user_id):
     else:
         df = pd.DataFrame()
         gr.Warning('数据类型不支持')
-    model_bge = load_bge_model_cached(bge_model_path)
+    model_bge = load_bge_model_cached(bge_m3_model_path)
     result_list = []
     columns_list = df.columns
     if 'title' in columns_list and 'content' in columns_list:

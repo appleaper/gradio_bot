@@ -1,7 +1,7 @@
 from config import conf_yaml
 from PIL import Image, ImageDraw, ImageFont
 
-font_path = conf_yaml['ocr']['font_path']
+from utils.config_init import font_path
 
 def ocr_detect(img_path, model):
     result, elapse = model(img_path)

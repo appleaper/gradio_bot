@@ -12,6 +12,7 @@ from local.rag.parse.video_parse import parse_video_do
 from utils.tool import encrypt_username, save_rag_group_name, reverse_dict, read_user_info_dict, save_json_file, read_json_file
 from local.database.lancedb.data_to_lancedb import create_or_add_data_to_lancedb, drop_lancedb_table
 from local.database.milvus.milvus_article_management import MilvusArticleManager
+from local.database.milvus.delete_data_from_milvus import drop_milvus_table
 from utils.config_init import rag_data_csv_dir, database_dir, articles_user_path, kb_article_map_path, database_type
 
 
@@ -53,8 +54,8 @@ def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, r
             df = parse_csv_do(file_name, id, user_id)
         elif suffix == '.md':
             df = parse_markdown_do(file_name, id, user_id)
-        # elif suffix == '.docx':
-        #     df = parse_docx_do(file_name, id, user_id)
+        elif suffix == '.docx':
+            df = parse_docx_do(file_name, id, user_id)
         elif suffix in ['.jpg', '.jpeg', '.png']:
             df = parse_image_do(file_name, id, user_id)
         elif suffix == '.mp3':
@@ -73,7 +74,7 @@ def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, r
             save_df = create_or_add_data_to_lancedb(database_dir, id, df)
         else:
             manager.create_collection(user_id)
-            manager.insert_data_to_milvus(df, user_id)
+            save_df = manager.insert_data_to_milvus(df, user_id)
         save_rag_group_csv_name(save_df, rag_data_csv_dir, id, articles_user_path, user_name)
         progress(round((file_index + 1) / len(rag_upload_files), 2))
     return articles_user_mapping_dict[user_name], None, None, []
@@ -81,8 +82,11 @@ def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, r
 
 def delete_article_from_database(need_detele_articles, all_articles_dict, request: gr.Request):
     user_name = request.username
-    all_articles_dict, articles_user_mapping_dict = drop_lancedb_table(need_detele_articles, all_articles_dict, user_name)
-    return all_articles_dict, articles_user_mapping_dict
+    if database_type == 'lancedb':
+        all_articles_dict, articles_user_mapping_dict = drop_lancedb_table(need_detele_articles, all_articles_dict, user_name)
+    else:
+        all_articles_dict, articles_user_mapping_dict = drop_milvus_table(need_detele_articles, all_articles_dict, user_name)
+    return all_articles_dict, articles_user_mapping_dict[user_name]
 
 
 def add_group_database(selected_documents_list, new_knowledge_base_name, request: gr.Request):

@@ -1,37 +1,63 @@
 local_chat:
   model_dict:
+    deepseek:
+      - 1.5B
     qwen2.5:
+      - 7B-Instruct
       - 0.5B-Instruct
+    百度:
+      - ernie_speed
+      - ernie-speed-128k
+      - eb-instant
+      - ernie-lite-8k
+      - ernie-tiny-8k
+    零一万物:
+      - yi_34b_chat
+    阿里在线:
+      - 1.5b-instruct
+      - 0.5b-instruct
+      - 1.8b-chat
+      - 0.5b-chat
+  name2path:
+    qwen2.5-7B-Instruct: C:\use\model\qwen2.5-7b-instruct
+    qwen2.5-0.5B-Instruct: C:\use\model\Qwen25_05B_Instruct
+    StepfunOcr: C:\use\model\stepfun-aiGOT-OCR2_0
+    deepseek-1.5B: C:\use\model\deepseek_r1_distill_qwen_1_5b
   max_history_len: 6
   max_output_len: 4096
   qwen_support:
     - qwen2.5-7B-Instruct
-    - qwen2.5-7B-Instruct-AWQ
-    - qwen2.5-1.5-Instruct-Coder
-    - qwen2.5-7B-Coder
-    - qwen2-1.5B-Instruct
-    - qwen2-7B-Instruct-AWQ
-    - qwen2.5-3B-Instruct
     - qwen2.5-0.5B-Instruct
-    - deepseek-7B
     - deepseek-1.5B
+  multimodal:
+    model_path: 'C:\use\model\openbmbMiniCPM-V-2_6-int4'
 
 rag:
   database:
-    choise: 'lancedb'
+    choise: 'lancedb'   # milvus,lancedb
     lancedb:
       save:
-        database_dir: 'data'
-        articles_user_path: 'user_article_mapping.json'
-        kb_article_map_path: 'kb_article_mappping.json'
+        database_dir: 'C:\use\code\RapidOcr_small\data\database\lancedb\data'
+        articles_user_path: 'C:\use\code\RapidOcr_small\data\database\lancedb\user_article_mapping.json'
+        kb_article_map_path: 'C:\use\code\RapidOcr_small\data\database\lancedb\kb_article_mappping.json'
     milvus:
       save:
-        articles_user_path: 'user_article_mapping.json'
-        kb_article_map_path: 'kb_article_mappping.json'
+        articles_user_path: 'C:\use\code\RapidOcr_small\data\database\milvus\user_article_mapping.json'
+        kb_article_map_path: 'C:\use\code\RapidOcr_small\data\database\milvus\kb_article_mappping.json'
+  embedding_mdoel:
+    bge_m3:
+      model_path: 'C:\use\model\BAAIbge-m3'
   parse_voice:
+    model_path: 'C:\use\model\FireRedASR-AED-L'
     voice_chunk_size: 1024
+  parse_image:
+    model_path: 'C:\use\model\stepfun-aiGOT-OCR2_0'
+  tokenizer:
+    trie_dir_path: 'C:\use\code\RapidOcr_small\data\res'
   top_k: 10
   max_rag_len: 10000
+  rag_data_csv_dir: 'C:\use\code\RapidOcr_small\data\rag\data_csv'
+  tmp_dir_path: 'C:\use\code\RapidOcr_small\data\tmp'
 
 
 user:
@@ -98,3 +124,5 @@ video:
     uncensored: 无码
     housewife: 人妻
     transparent: 透明
+ocr:
+  font_path: 'C:\use\code\RapidOcr_small\data\ocr\font\SimHei.ttf'

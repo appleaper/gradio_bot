@@ -7,7 +7,7 @@ from tqdm import tqdm
 from PIL import Image
 from local.rag.rag_model import load_bge_model_cached, load_model_cached
 
-from utils.config_init import rag_ocr_model_path, bge_model_path
+from utils.config_init import StepfunOcr_model_path, bge_m3_model_path
 
 
 
@@ -16,14 +16,14 @@ def generate_unique_filename(extension='jpg'):
     return unique_filename
 
 def parse_pdf_do(pdf_path, id, user_id):
-    model_path = rag_ocr_model_path
+    model_path = StepfunOcr_model_path
     model, tokenizer = load_model_cached(model_path)
     # 打开PDF文件
     pdf_document = fitz.open(pdf_path)
     # 遍历每一页
 
     info_list = []
-    model_bge = load_bge_model_cached(bge_model_path)
+    model_bge = load_bge_model_cached(bge_m3_model_path)
     for page_num in tqdm(range(len(pdf_document)), total=len(pdf_document)):
         page = pdf_document.load_page(page_num)
 

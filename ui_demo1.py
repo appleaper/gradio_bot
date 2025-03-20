@@ -10,17 +10,12 @@ from utils.plot_data import create_pie_chart
 from local.rag.deal_many_file import deal_mang_knowledge_files, add_group_database, delete_group_database, delete_article_from_database
 
 from utils.tool import read_user_info_dict, read_md_doc
-from utils.config_init import get_database_config
+from utils.config_init import get_database_config, chat_model_dict, user_password_info_dict_path, database_type, tmp_dir_path
 from local.user.user_auth_management import AuthManager
 
-
 default_system = conf_yaml['ui_conf']['default_system']
-local_dict = conf_yaml['local_chat']['model_dict']
-
-user_password_info_dict_path = conf_yaml['user']['user_password_info_dict_path']
-default_database_choice = conf_yaml['rag']['database']['choise']
 database_dir, articles_user_path, kb_article_map_path = get_database_config()
-os.environ["GRADIO_TEMP_DIR"] = os.path.join(os.getcwd(), "tmp")
+os.environ["GRADIO_TEMP_DIR"] = tmp_dir_path
 
 def clear_session():
     return '', [], []
@@ -40,13 +35,13 @@ with gr.Blocks() as demo:
                 default_history = []
                 history_state = gr.State(value=default_history)
                 with gr.Row():
-                    model_type = gr.Dropdown(list(local_dict.keys()), label="model type")
+                    model_type = gr.Dropdown(list(chat_model_dict.keys()), label="model type")
                     model_name = gr.Dropdown([], label="model name")
                     steam_check_box = gr.CheckboxGroup(["流式输出"], label="输出形式")
 
                 @model_type.change(inputs=model_type, outputs=model_name)
                 def update_cities(model_type):
-                    model_list = list(local_dict[model_type])
+                    model_list = list(chat_model_dict[model_type])
                     return gr.Dropdown(choices=model_list, value=model_list[0], interactive=True)
 
 
@@ -153,6 +148,9 @@ with gr.Blocks() as demo:
                 def update_selectable_knowledge_bases(input_value):
                     return gr.CheckboxGroup(choices=list(input_value.values()), label="rag管理"), gr.CheckboxGroup(choices=list(input_value.values()), label='可选文章')
 
+                @kb_article_dict_state.change(inputs=kb_article_dict_state, outputs=[selectable_knowledge_bases_checkbox_group, book_type, knowledge_base_info_json_table])
+                def update_selectable_knowledge_bases_checkbox_group_and_book_type(input_value):
+                    return gr.CheckboxGroup(choices=list(input_value.keys()), label='已有知识库'), gr.Dropdown(choices=list(input_value.keys()), label="上下文知识"), input_value
             with gr.TabItem('ToDo'):
                 need_to_do_string = read_md_doc('./readme.md')
                 gr.Markdown(need_to_do_string)
@@ -160,9 +158,9 @@ with gr.Blocks() as demo:
         with gr.TabItem("本地视频播放"):
             adult_ui_show()
 
-        with gr.TabItem('ocr check'):
+        with gr.TabItem('ocr识别'):
             with gr.Row():
-                ocr_model_type = gr.Dropdown(['StepfunOcr', 'RapidOCR'], label="选择模型",info='ocr在线识别，推荐StepfunOcr方法，准确率高。RapidOCR可以直观查看哪些部分识别到了')
+                ocr_model_type = gr.Dropdown(['StepfunOcr'], value='StepfunOcr',label="选择模型",info='ocr在线识别')
             with gr.Row():
                 img_input = gr.Image(type='filepath', label='Image')
                 img_output = gr.Image()
@@ -174,4 +172,4 @@ with gr.Blocks() as demo:
 # auth_manager = AuthManager(user_password_info_dict_path)
 # demo.launch(server_name='0.0.0.0', auth=auth_manager.verify_auth)
 
-demo.launch(server_name='0.0.0.0', auth=[('a', "a")])
+demo.launch(server_name='0.0.0.0', auth=[('a', "a"), ('b', 'b'), ('pandas', '123')], server_port=7680)

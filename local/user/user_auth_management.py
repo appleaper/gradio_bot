@@ -19,11 +19,18 @@ class AuthManager:
             if user_name not in json_info_dict.keys():
                 json_info_dict[user_name] = {}
         save_json_file(json_info_dict, json_file_path)
+
     def init_user_art_kb_json_files(self, user_info):
         '''当有新增用户时，要及时更新用户和文章匹配表，和更新用户和知识库匹配表'''
         for file_path in [lancedb_articles_user_path,lancedb_kb_article_map_path,milvus_articles_user_path, milvus_kb_article_map_path]:
             if not os.path.exists(file_path):
                 self.init_user_art_kb_json_files_do(file_path, user_info)
+            else:
+                json_info = read_json_file(file_path)
+                for user_name in user_info.keys():
+                    if user_name not in json_info.keys():
+                        json_info[user_name] = {}
+                save_json_file(json_info, file_path)
 
     def load_auth_from_json(self):
         user_info = read_json_file(self.json_file_path)
@@ -50,7 +57,11 @@ class AuthManager:
         return stored_password is not None and stored_password == password
 
 if __name__ == "__main__":
-    json_file_path = 'auth.json'
+    import sys
+    if sys.platform == 'win32':
+        json_file_path = r'C:\use\code\RapidOcr_small\config\auth.json'
+    else:
+        json_file_path = ''
     auth_manager = AuthManager(json_file_path)
     def greet(name):
         return f"Hello, {name}!"

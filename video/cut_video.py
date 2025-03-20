@@ -2,9 +2,8 @@ import os.path
 import subprocess
 import gradio as gr
 from config import conf_yaml
+from utils.config_init import video_cut_save_dir, video_cut_record_path
 
-video_save_dir = conf_yaml['video']['cut_save_dir']
-video_cut_record_path = conf_yaml['video']['cut_record_path']
 def time_to_seconds(time_string):
     hours, minutes, seconds = map(int, time_string.split(':'))
     return hours * 3600 + minutes * 60 + seconds
@@ -37,7 +36,7 @@ def video_cut(input_video_path, s_h, s_m, s_s, e_h, e_m, e_s):
     e_m = get_time_str(e_m)
     e_s = get_time_str(e_s)
     file_name = os.path.splitext(os.path.basename(input_video_path))[0]
-    save_path = os.path.join(video_save_dir, file_name + f'{s_h}_{s_m}__to__{e_h}_{e_m}' +'.mp4')
+    save_path = os.path.join(video_cut_save_dir, file_name + f'{s_h}_{s_m}__to__{e_h}_{e_m}' +'.mp4')
     if os.path.exists(save_path):
         gr.Warning('video has been exist!')
         return '','','','','',''

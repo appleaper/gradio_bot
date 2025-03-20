@@ -2,8 +2,8 @@ import os
 import re
 import pandas as pd
 from tqdm import tqdm
-from config import conf_yaml
 from local.qwen.qwen_api import qwen_model_init, qwen_model_detect
+from utils.config_init import video_translation_title_csv_path
 
 def contains_chinese_or_japanese(text):
     # 正则表达式匹配日文假名字符
@@ -39,8 +39,9 @@ def new_translation_title():
         info_list.append(info)
     df = pd.DataFrame(info_list)
     df.to_csv('./translation.csv', index=False, encoding='utf8')
+
 def get_translation_title():
-    df = pd.read_csv(conf_yaml['video']['translation_title_csv_path'])
+    df = pd.read_csv(video_translation_title_csv_path)
     name_dict = {}
     for index, row in df.iterrows():
         org_name = row['org']

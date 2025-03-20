@@ -2,6 +2,7 @@ import os
 import re
 import uuid
 import json
+import ollama
 import hashlib
 import pandas as pd
 import pickle as pkl
@@ -179,6 +180,13 @@ def read_md_doc(path):
     with open(path, 'r', encoding='utf-8') as file:
         content = file.read()
     return content
+
+def get_ollama_model_list():
+    res = ollama.list().models
+    model_list = []
+    for model in res:
+        model_list.append(model.model)
+    return model_list
 
 if __name__ == '__main__':
     csv_path = '/home/pandas/snap/code/RapidOcr/database_data/rag/data_csv/中国历代政治得失分块版.csv.csv'

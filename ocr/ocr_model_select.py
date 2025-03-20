@@ -6,9 +6,8 @@ from ocr.ocr_show import ocr_detect
 # from rapidocr_onnxruntime import RapidOCR
 from PIL import Image, ImageDraw, ImageFont
 from transformers import AutoModel, AutoTokenizer
+from utils.config_init import font_path
 
-font_path = conf_yaml['ocr']['font_path']
-name2path = conf_yaml['local_chat']['name2path']
 
 def cached_model_loader(func):
     cache = {}

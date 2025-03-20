@@ -38,7 +38,6 @@ def create_or_add_data_to_lancedb(rag_database_name, table_name, df):
 def drop_lancedb_table(need_detele_articles, all_articles_dict, user_name):
     '''
     删除文章
-    todo:这里有个问题，保存csv的时候需要指定用户是谁。不能全删除了
     '''
     db = lancedb.connect(database_dir)
     reverse_all_articles_dict = reverse_dict(all_articles_dict)
@@ -62,7 +61,7 @@ def drop_lancedb_table(need_detele_articles, all_articles_dict, user_name):
         for need_detele_article in need_detele_articles:
             if need_detele_article in articles_list:
                 articles_list.remove(need_detele_article)
-        if len(articles_list):
+        if len(articles_list)==0:
             # 如果列表为空，删除该键值对
             del knowledge_json[user_name][knowledge_name]
 

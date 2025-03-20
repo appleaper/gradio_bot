@@ -2,12 +2,12 @@ import hashlib
 import pandas as pd
 from local.rag.rag_model import load_model_cached, load_bge_model_cached
 
-from utils.config_init import bge_model_path, rag_ocr_model_path
+from utils.config_init import bge_m3_model_path, StepfunOcr_model_path
 
 def parse_image_do(file_name, id, user_id):
     info_list = []
-    model, tokenizer = load_model_cached(rag_ocr_model_path)
-    model_bge = load_bge_model_cached(bge_model_path)
+    model, tokenizer = load_model_cached(StepfunOcr_model_path)
+    model_bge = load_bge_model_cached(bge_m3_model_path)
     ocr_result = model.chat(tokenizer, file_name, ocr_type='format')
     info = {}
     info['user_id'] = user_id

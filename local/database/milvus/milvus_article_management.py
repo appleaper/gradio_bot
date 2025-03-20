@@ -1,4 +1,6 @@
 import gradio as gr
+import pandas as pd
+import numpy as np
 from pymilvus import MilvusClient, DataType
 
 class MilvusArticleManager:
@@ -79,7 +81,17 @@ class MilvusArticleManager:
         data_insert = []
         for line in data:
             hash_check = line['hash_check']
-            line['content'] = line['content'][:20000]
+            if str(line['title']) == 'nan':
+                line['title'] = ''
+            if str(line['content']) == 'nan':
+                line['content'] = ''
+            if str(line['page_count']) == 'nan':
+                line['page_count'] = ''
+            if type(line['vector']) == str:
+                line['vector'] = np.array(eval(line['vector']), dtype=np.float32)
+            if isinstance(line['page_count'], int):
+                line['page_count'] = str(line['page_count'])
+            line['content'] = line['content'][:6666]
             res = self.client.query(
                 collection_name=user_id,
                 filter=f"hash_check=='{hash_check}'",
@@ -95,6 +107,9 @@ class MilvusArticleManager:
             self.client.flush(
                 collection_name=user_id
             )
+            return pd.DataFrame(data_insert)
+        else:
+            return pd.DataFrame([])
 
     def get_collection_counts(self, user_id):
         '''获取milvus中指定集合中有多少条数据'''
@@ -118,6 +133,7 @@ class MilvusArticleManager:
                 collection_name=user_id,
                 replica_number=1
             )
+
     def search_vectors_single(self, user_id, article_ids, query_vector, limit=3):
         '''根据用户id，文章id和向量来搜索相关内容，仅限搜索一篇文章'''
         self.check_collections_state(user_id)
@@ -143,6 +159,7 @@ class MilvusArticleManager:
             info['file_from'] = res_i['entity']['file_from']
             output_info_list.append(info)
         return output_info_list
+
     def search_vectors_with_articles(self, user_id, query_vector, articles_id_list, limit=3):
         '''根据文章id列表来查询相似向量'''
         self.check_collections_state(user_id)

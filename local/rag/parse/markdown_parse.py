@@ -5,12 +5,12 @@ from tqdm import tqdm
 from local.rag.rag_model import load_bge_model_cached
 from local.rag.util import split_by_heading
 from utils.tool import read_md_doc
-from utils.config_init import bge_model_path
+from utils.config_init import bge_m3_model_path
 
 def parse_markdown_do(md_path, id, user_id):
     markdown_data = read_md_doc(md_path)
     markdown_data_list = split_by_heading(markdown_data, level=2)
-    model_bge = load_bge_model_cached(bge_model_path)
+    model_bge = load_bge_model_cached(bge_m3_model_path)
     file_name = os.path.basename(md_path)
     result_list = []
     for index, markdown_line in tqdm(enumerate(markdown_data_list), total=len(markdown_data_list)):

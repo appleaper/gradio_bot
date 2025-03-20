@@ -6,9 +6,9 @@ import gradio as gr
 import pandas as pd
 from config import conf_yaml
 from video.title_translation import get_translation_title, contains_chinese_or_japanese
+from utils.config_init import video_mark_csv_path
 
 root_dir = conf_yaml['video']['root_dir']
-video_csv_path = conf_yaml['video']['mark_csv_path']
 start_score_list = conf_yaml['video']['start_score']
 clothing_dict = conf_yaml['video']['clothing']
 action_dict = conf_yaml['video']['action']
@@ -94,8 +94,8 @@ def load_local_video():
     random_mp4_file = get_random_mp4_file(folder_paths)
     title_name = os.path.splitext(os.path.basename(random_mp4_file))[0]
     translation_title_path = get_translation_name(os.path.basename(random_mp4_file))
-    if os.path.exists(video_csv_path):
-        df = pd.read_csv(video_csv_path)
+    if os.path.exists(video_mark_csv_path):
+        df = pd.read_csv(video_mark_csv_path)
         if len(df[df['video_path'] == random_mp4_file]) != 0:
             start_radio = df.loc[df['video_path'] == random_mp4_file, 'start_score'].values[0]
             breast_radio = df.loc[df['video_path'] == random_mp4_file, 'breast_size'].values[0]
@@ -128,13 +128,13 @@ def load_local_video():
             random_mp4_file, random_mp4_file, start_radio, breast_radio, clothing_boxs, \
                 action_boxs, scene_boxs, other_boxs, describe_text, new_df = init_dataframe(random_mp4_file)
             df = pd.concat((df, new_df))
-            df.to_csv(video_csv_path, index=False)
+            df.to_csv(video_mark_csv_path, index=False)
             return random_mp4_file, random_mp4_file, start_radio, breast_radio, \
                 clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name, translation_title_path
     else:
         random_mp4_file, random_mp4_file, start_radio, breast_radio, clothing_boxs, \
             action_boxs, scene_boxs, other_boxs, describe_text, df = init_dataframe(random_mp4_file)
-        df.to_csv(video_csv_path, index=False)
+        df.to_csv(video_mark_csv_path, index=False)
         return random_mp4_file, random_mp4_file, start_radio, breast_radio, \
             clothing_boxs, action_boxs, scene_boxs, other_boxs, describe_text, title_name, translation_title_path
 
@@ -145,8 +145,8 @@ def mark_video_like(
         clothing_boxs, action_boxs, scene_boxs, other_boxs,
         describe_text
 ):
-    if os.path.exists(video_csv_path):
-        df = pd.read_csv(video_csv_path)
+    if os.path.exists(video_mark_csv_path):
+        df = pd.read_csv(video_mark_csv_path)
     else:
         df = pd.DataFrame(columns=columns_list)
         df['video_path'] = video_path
@@ -161,7 +161,7 @@ def mark_video_like(
             select_csv2ch.append(ch2csv[ch])
         df.loc[df['video_path'] == video_path, select_csv2ch] = True
     df = df[df['start_score'].isin(start_score_list)]
-    df.to_csv(video_csv_path, index=False, encoding='utf8')
+    df.to_csv(video_mark_csv_path, index=False, encoding='utf8')
     gr.Info('success', duration=2)
 
 if __name__ == '__main__':

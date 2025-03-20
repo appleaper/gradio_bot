@@ -6,7 +6,7 @@ from tqdm import tqdm
 from local.rag.parse.fireredasr.models.fireredasr import FireRedAsr
 from local.rag.rag_model import load_bge_model_cached
 
-from utils.config_init import bge_model_path, tmp_dir_path, voice_model_path, voice_chunk_size
+from utils.config_init import bge_m3_model_path, tmp_dir_path, voice_model_path, voice_chunk_size
 
 def transcribe_audio(audio_path, model):
     """
@@ -119,7 +119,7 @@ def process_audio(input_mp3_file, output_folder, model):
 def parse_voice_do(file_name, id, user_id):
     '''对音频进行解析'''
     model = FireRedAsr.from_pretrained("aed", voice_model_path)
-    model_bge = load_bge_model_cached(bge_model_path)
+    model_bge = load_bge_model_cached(bge_m3_model_path)
     voice_str = process_audio(file_name, tmp_dir_path, model)
     info_list = []
 

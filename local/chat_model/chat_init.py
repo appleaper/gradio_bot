@@ -3,9 +3,8 @@ from config import conf_yaml
 from local.qwen.qwen_api import qwen_model_init
 from local.llama3.llama3_api import llama3_model_init
 from local.MiniCPM.minicpm_api import minicpm_model_init
+from utils.config_init import name2path
 
-
-name2path = conf_yaml['local_chat']['name2path']
 qwen_support_list = conf_yaml['local_chat']['qwen_support']
 
 
