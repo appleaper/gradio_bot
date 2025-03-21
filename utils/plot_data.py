@@ -5,6 +5,7 @@ from matplotlib.font_manager import FontProperties
 from utils.config_init import font_path
 
 font_prop = FontProperties(fname=font_path)
+
 def get_gpu_memory_info():
     gpus = GPUtil.getGPUs()
     gpu_memory_info = []

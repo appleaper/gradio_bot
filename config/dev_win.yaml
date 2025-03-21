@@ -6,14 +6,7 @@ local_chat:
   max_output_len: 4096
   qwen_support:
     - qwen2.5-7B-Instruct
-    - qwen2.5-7B-Instruct-AWQ
-    - qwen2.5-1.5-Instruct-Coder
-    - qwen2.5-7B-Coder
-    - qwen2-1.5B-Instruct
-    - qwen2-7B-Instruct-AWQ
-    - qwen2.5-3B-Instruct
     - qwen2.5-0.5B-Instruct
-    - deepseek-7B
     - deepseek-1.5B
 
 rag:
@@ -43,10 +36,6 @@ ui_conf:
 video:
   root_dir: 'D:\video'
   cut_save_dir: 'D:\video\cur_video'
-  cut_record_path: 'C:\use\code\RapidOcr_small\data\adult_video\video_cut_record.txt'
-  mark_csv_path: 'C:\use\code\RapidOcr_small\data\adult_video\movie_mark.csv'
-  translation_title_csv_path: 'C:\use\code\RapidOcr_small\data\translation\translation.csv'
-  need_translation_title_path: 'C:\use\code\RapidOcr_small\data\translation\need_translation.txt'
   breast_size:
     - 巨乳
     - 中大

@@ -7,7 +7,6 @@ import lancedb
 import gradio as gr
 import numpy as np
 from ollama import chat
-# from local.rag.util import read_rag_name_dict
 from local.qwen.qwen_api import qwen_model_detect
 from local.llama3.llama3_api import llama3_model_detect
 from local.MiniCPM.minicpm_api import minicpm_model_detect
@@ -19,10 +18,7 @@ from utils.tool import read_user_info_dict, reverse_dict
 from utils.tool import encrypt_username
 from local.database.milvus.milvus_article_management import MilvusArticleManager
 from utils.config_init import articles_user_path, kb_article_map_path, database_dir, \
-    rag_top_k, max_history_len, max_rag_len, qwen_support_list, ollama_support_list
-from local.chat_model.ollama_chat.ollama_chat_do import ollama_chat_do
-
-from utils.config_init import database_type, rag_top_k
+    rag_top_k, max_history_len, max_rag_len, qwen_support_list, ollama_support_list, database_type,device_str
 
 def add_rag_info(textbox, book_type, rag_model, database_name, top_k, user_name):
     '''
@@ -104,7 +100,8 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     :return:
     '''
     user_name = request.username
-    torch.cuda.empty_cache()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     model_name = model_type + '-' + parm_b
     if str(book_type) == 'None':
         rag_str = '无'
@@ -135,7 +132,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
         elif model_name == 'MiniCPM3-4B' and steam_check_box == []:
             response_message = minicpm_model_detect(history, model, tokenizer)
         elif model_name in ollama_support_list and steam_check_box == []:
-            res = ollama.chat(model='qwen2.5:0.5b', messages=history)
+            res = ollama.chat(model=parm_b, messages=history)
             response_message = res.message.content
         else:
             gr.Error(f'{model_name} not support!')
@@ -147,7 +144,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     else:
         if model_name in qwen_support_list and len(steam_check_box)!=0 and steam_check_box[0]=='流式输出':
             conversion = tokenizer.apply_chat_template(history, add_generation_prompt=True, tokenize=False)
-            model_inputs = tokenizer(conversion, return_tensors="pt").to('cuda')
+            model_inputs = tokenizer(conversion, return_tensors="pt").to(device_str)
             streamer = TextIteratorStreamer(tokenizer)
             generation_kwargs = dict(model_inputs, streamer=streamer, max_new_tokens=512)
             thread = Thread(target=model.generate, kwargs=generation_kwargs)

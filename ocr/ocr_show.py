@@ -1,4 +1,3 @@
-from config import conf_yaml
 from PIL import Image, ImageDraw, ImageFont
 
 from utils.config_init import font_path

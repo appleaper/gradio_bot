@@ -1,5 +1,5 @@
 import os
-
+import torch
 from config import conf_yaml
 from utils.tool import save_json_file, read_json_file, get_ollama_model_list
 
@@ -14,11 +14,27 @@ multimodal_model_path = os.path.join(model_dir, 'openbmbMiniCPM-V-2_6-int4')
 bge_m3_model_path = os.path.join(model_dir, 'BAAIbge-m3')
 voice_model_path = os.path.join(model_dir, 'FireRedASR-AED-L')
 chat_model_dict = {'qwen2.5':['0.5B-Instruct']}
+
+# todo：这列不太智能，只能暂时手动的添加，看看怎么改一下
 name2path = {
     "qwen2.5-0.5B-Instruct": qwen25_05B_Instruct_model_path,
+    'StepfunOcr':StepfunOcr_model_path
 }
-
 ollama_support_list = ['ollama-qwen2.5:0.5b']
+
+'''cuda设备选择'''
+if torch.cuda.is_available():
+    device = torch.device('cuda')
+    device_str = 'cuda'
+else:
+    device = torch.device('cpu')
+    device_str = 'cpu'
+
+'''聊天相关'''
+qwen_support_list = conf_yaml['local_chat']['qwen_support']
+max_rag_len = conf_yaml['rag']['max_rag_len']   # rag的最大长度
+max_history_len = conf_yaml['local_chat']['max_history_len']       # 聊天的记录的最大历史记录数
+rag_top_k = conf_yaml['rag']['top_k']       # rag检索时返回多少条相关内容
 
 '''中间数据'''
 data_dir = os.path.join(project_dir, 'data')
@@ -80,10 +96,7 @@ video_mark_csv_path = os.path.join(video_mark_dir, 'adult_video', 'movie_mark.cs
 video_translation_title_csv_path = os.path.join(translation_dir, 'translation.csv')
 video_need_translation_title_path = os.path.join(translation_dir, 'need_translation.txt')
 
-qwen_support_list = conf_yaml['local_chat']['qwen_support']
-max_rag_len = conf_yaml['rag']['max_rag_len']
-max_history_len = conf_yaml['local_chat']['max_history_len']
-rag_top_k = conf_yaml['rag']['top_k']
+
 
 database_dir, articles_user_path, kb_article_map_path = get_database_config()
 
