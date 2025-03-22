@@ -1,7 +1,4 @@
 local_chat:
-  model_dict:
-    qwen2.5:
-      - 0.5B-Instruct
   max_history_len: 6
   max_output_len: 4096
   qwen_support:

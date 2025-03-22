@@ -152,7 +152,7 @@ with gr.Blocks() as demo:
                 def update_selectable_knowledge_bases_checkbox_group_and_book_type(input_value):
                     return gr.CheckboxGroup(choices=list(input_value.keys()), label='已有知识库'), gr.Dropdown(choices=list(input_value.keys()), label="上下文知识"), input_value
             with gr.TabItem('ToDo'):
-                need_to_do_string = read_md_doc('./readme.md')
+                need_to_do_string = read_md_doc('计划和目前的bug.md')
                 gr.Markdown(need_to_do_string)
 
         with gr.TabItem("本地视频播放"):

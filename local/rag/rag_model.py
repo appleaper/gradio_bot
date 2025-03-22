@@ -20,7 +20,7 @@ def cached_model_loader(func):
 def load_model_cached(model_path):
     return load_model(model_path)
 
-@cached_modecl_loader
+@cached_model_loader
 def load_bge_model_cached(model_path):
     model_bge = BGEM3FlagModel(model_path, use_fp16=True)
     return model_bge

@@ -9,18 +9,26 @@ project_dir = os.path.dirname(os.path.dirname(__file__))
 '''模型地址'''
 model_dir = os.path.join(project_dir, 'model')
 qwen25_05B_Instruct_model_path = os.path.join(model_dir, 'Qwen25_05B_Instruct')
+deep_seek_r1_15b_model_path = os.path.join(model_dir, 'deepseek_r1_distill_qwen_1_5b')
 StepfunOcr_model_path = os.path.join(model_dir, 'stepfun-aiGOT-OCR2_0')
 multimodal_model_path = os.path.join(model_dir, 'openbmbMiniCPM-V-2_6-int4')
 bge_m3_model_path = os.path.join(model_dir, 'BAAIbge-m3')
 voice_model_path = os.path.join(model_dir, 'FireRedASR-AED-L')
-chat_model_dict = {'qwen2.5':['0.5B-Instruct']}
+chat_model_dict = {
+    'qwen2.5':['0.5B-Instruct'],
+    'deepseek':['1.5B']
+}
 
 # todo：这列不太智能，只能暂时手动的添加，看看怎么改一下
 name2path = {
-    "qwen2.5-0.5B-Instruct": qwen25_05B_Instruct_model_path,
-    'StepfunOcr':StepfunOcr_model_path
+    'qwen2.5-0.5B-Instruct': qwen25_05B_Instruct_model_path,
+    'StepfunOcr':StepfunOcr_model_path,
+    'deepseek-1.5B':deep_seek_r1_15b_model_path
 }
+
+'''ollama配置'''
 ollama_support_list = ['ollama-qwen2.5:0.5b']
+chat_model_dict['ollama'] = ['qwen2.5:0.5b']
 
 '''cuda设备选择'''
 if torch.cuda.is_available():
@@ -83,9 +91,8 @@ def get_database_config():
 voice_chunk_size = conf_yaml['rag']['parse_voice']['voice_chunk_size']
 
 
-'''ollama配置'''
-# ollama_model_list = get_ollama_model_list()
-chat_model_dict['ollama'] = ['qwen2.5:0.5b']
+
+
 
 '''video配置'''
 video_mark_dir = os.path.join(data_dir, 'video_mark')
