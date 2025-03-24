@@ -5,6 +5,7 @@ from local.llama3.llama3_api import llama3_model_init
 from local.MiniCPM.minicpm_api import minicpm_model_init
 from utils.config_init import name2path, qwen_support_list
 
+
 def load_model(model_name):
     if model_name in qwen_support_list:
         model, tokenizer = qwen_model_init(name2path[model_name])

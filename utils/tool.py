@@ -7,6 +7,9 @@ import hashlib
 import pandas as pd
 import pickle as pkl
 
+def generate_unique_filename(extension='jpg'):
+    unique_filename = str(uuid.uuid4()) + '.' + extension
+    return unique_filename
 
 def load_html_file(filepath):
     '''读取htmml文件'''

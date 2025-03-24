@@ -10,10 +10,9 @@ from ollama import chat
 from local.qwen.qwen_api import qwen_model_detect
 from local.llama3.llama3_api import llama3_model_detect
 from local.MiniCPM.minicpm_api import minicpm_model_detect
-from local.local_api import load_model_cached
+from local.local_api import load_model_cached, load_rag_cached
 from threading import Thread
 from transformers import TextIteratorStreamer
-from local.embedding_model.embedding_init import load_rag_model
 from utils.tool import read_user_info_dict, reverse_dict
 from utils.tool import encrypt_username
 from local.database.milvus.milvus_article_management import MilvusArticleManager
@@ -106,7 +105,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     if str(book_type) == 'None':
         rag_str = '无'
     else:
-        rag_model, rag_tokenizer = load_rag_model('bge_m3')
+        rag_model, rag_tokenizer = load_rag_cached('bge_m3')
         rag_str = add_rag_info(textbox, book_type, rag_model, database_dir, rag_top_k, user_name)
     if show_history is None:
         history = []

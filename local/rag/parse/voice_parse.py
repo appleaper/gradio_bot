@@ -1,6 +1,8 @@
 import os
 import hashlib
 import subprocess
+import sys
+
 import pandas as pd
 from tqdm import tqdm
 from local.rag.parse.fireredasr.models.fireredasr import FireRedAsr
@@ -78,6 +80,25 @@ def split_single_mp3_and_convert(input_file, output_folder, start_time, end_time
         print(f"生成片段 {segment_index} 时出错: {e}")
         return None
 
+def get_audio_duration(file_path):
+    try:
+        command = ['ffmpeg', '-i', file_path]
+        # 明确指定 encoding 为 'utf-8'
+        result = subprocess.run(command, stderr=subprocess.PIPE, text=True, encoding='utf-8')
+        output = result.stderr
+        duration_line = next((line for line in output.splitlines() if 'Duration' in line), None)
+        if duration_line:
+            duration_str = duration_line.split(' ')[3].rstrip(',')
+            h, m, s = map(float, duration_str.split(':'))
+            duration = h * 3600 + m * 60 + s
+            return duration
+        else:
+            print("未找到时长信息")
+            return None
+    except Exception as e:
+        print(f"发生错误: {e}")
+        return None
+
 def process_audio(input_mp3_file, output_folder, model):
     """
     处理音频文件，包括切割、转录和删除临时文件
@@ -87,9 +108,12 @@ def process_audio(input_mp3_file, output_folder, model):
     :return: 所有片段的转录结果
     """
     # 获取输入文件的时长（秒）
-    cmd = f'ffmpeg -i "{input_mp3_file}" -f null - 2>&1 | grep "Duration" | cut -d " " -f 4 | sed s/,// | sed s/\\\\./,/ | awk -F: \'{{ print ($1 * 3600) + ($2 * 60) + $3 }}\''
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    total_duration = float(result.stdout.strip())
+    if sys.platform == 'win32':
+        total_duration = get_audio_duration(input_mp3_file)
+    else:
+        cmd = f'ffmpeg -i "{input_mp3_file}" -f null - 2>&1 | grep "Duration" | cut -d " " -f 4 | sed s/,// | sed s/\\\\./,/ | awk -F: \'{{ print ($1 * 3600) + ($2 * 60) + $3 }}\''
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        total_duration = float(result.stdout.strip())
 
     segment_duration = 60
     # 计算片段数量

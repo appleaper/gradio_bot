@@ -23,7 +23,8 @@ chat_model_dict = {
 name2path = {
     'qwen2.5-0.5B-Instruct': qwen25_05B_Instruct_model_path,
     'StepfunOcr':StepfunOcr_model_path,
-    'deepseek-1.5B':deep_seek_r1_15b_model_path
+    'deepseek-1.5B':deep_seek_r1_15b_model_path,
+    'FireRedAsr':voice_model_path
 }
 
 '''ollama配置'''

@@ -1,17 +1,20 @@
 import os
 import gradio as gr
+import pandas as pd
+
 from local.chat_model.chat_do import local_chat
 
-from ocr.ocr_model_select import get_result_image
+
 from config import conf_yaml
 from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
 from local.ui.adult_ui import adult_ui_show
+from local.ui.ocr_ui import ocr_ui_show
+from local.voice.speech_recognition_do import speech_recognition
 from utils.plot_data import create_pie_chart
 from local.rag.deal_many_file import deal_mang_knowledge_files, add_group_database, delete_group_database, delete_article_from_database
-
+from local.rag.search_data_from_database import search_data_from_database_do, get_user_select_info
 from utils.tool import read_user_info_dict, read_md_doc
-from utils.config_init import get_database_config, chat_model_dict, user_password_info_dict_path, database_type, tmp_dir_path
-from local.user.user_auth_management import AuthManager
+from utils.config_init import get_database_config, chat_model_dict, tmp_dir_path
 
 default_system = conf_yaml['ui_conf']['default_system']
 database_dir, articles_user_path, kb_article_map_path = get_database_config()
@@ -148,9 +151,42 @@ with gr.Blocks() as demo:
                 def update_selectable_knowledge_bases(input_value):
                     return gr.CheckboxGroup(choices=list(input_value.values()), label="rag管理"), gr.CheckboxGroup(choices=list(input_value.values()), label='可选文章')
 
-                @kb_article_dict_state.change(inputs=kb_article_dict_state, outputs=[selectable_knowledge_bases_checkbox_group, book_type, knowledge_base_info_json_table])
-                def update_selectable_knowledge_bases_checkbox_group_and_book_type(input_value):
-                    return gr.CheckboxGroup(choices=list(input_value.keys()), label='已有知识库'), gr.Dropdown(choices=list(input_value.keys()), label="上下文知识"), input_value
+
+
+
+            with gr.TabItem('搜索'):
+                with gr.Row():
+                    search_type = gr.Dropdown(choices=['向量搜索','es搜索'], scale=1, label='检索类型')
+                    search_database = gr.Dropdown(choices=[], label='检索范围')
+                    search_tok_k = gr.Textbox(value='3', label='返回多少条结果')
+                with gr.Row():
+                    search_text = gr.Textbox(placeholder='输入你想搜索的内容',scale=4)
+                    search_button = gr.Button(value='搜索', scale=1)
+                with gr.Row():
+                    search_show = gr.DataFrame(value=pd.DataFrame([]))
+
+                with gr.Row():
+                    search_info_title = gr.Markdown(label='搜索结果标题')
+                    search_info_file_from = gr.Markdown(label='搜索结果来源')
+                with gr.Row():
+                    search_info_content = gr.Markdown(label='搜索结果正文')
+
+                search_button.click(
+                    search_data_from_database_do,
+                    inputs=[search_type, search_text, search_database, search_tok_k],
+                    outputs = [search_show]
+                )
+                search_text.submit(
+                    search_data_from_database_do,
+                    inputs=[search_type, search_text, search_database, search_tok_k],
+                    outputs=[search_show]
+                )
+                search_show.select(
+                    get_user_select_info,
+                    inputs=None,
+                    outputs=[search_info_title, search_info_content, search_info_file_from]
+                )
+
             with gr.TabItem('ToDo'):
                 need_to_do_string = read_md_doc('计划和目前的bug.md')
                 gr.Markdown(need_to_do_string)
@@ -159,14 +195,29 @@ with gr.Blocks() as demo:
             adult_ui_show()
 
         with gr.TabItem('ocr识别'):
-            with gr.Row():
-                ocr_model_type = gr.Dropdown(['StepfunOcr'], value='StepfunOcr',label="选择模型",info='ocr在线识别')
-            with gr.Row():
-                img_input = gr.Image(type='filepath', label='Image')
-                img_output = gr.Image()
-                ocr_text = gr.Textbox(lines=20, max_lines=50, label='ocr_ouput', interactive=True, show_copy_button=True, container=True)
-            img_input.upload(get_result_image, inputs=[img_input, ocr_model_type], outputs=[img_input, img_output, ocr_text])
+            ocr_ui_show()
 
+        with gr.TabItem('语音识别'):
+            with gr.Row():
+                speech_recognition_file = gr.File(label='上传一个mp3')
+            with gr.Row():
+                speech_recognition_output_text = gr.Textbox(label='语音转文字结果', show_copy_button=True)
+            speech_recognition_file.upload(speech_recognition, inputs=speech_recognition_file, outputs=[speech_recognition_output_text, speech_recognition_file])
+
+        @kb_article_dict_state.change(
+            inputs=kb_article_dict_state,
+            outputs=[
+                selectable_knowledge_bases_checkbox_group,
+                book_type,
+                knowledge_base_info_json_table,
+                search_database
+            ])
+        def update_selectable_knowledge_bases_checkbox_group_and_book_type(input_value):
+            a = gr.CheckboxGroup(choices=list(input_value.keys()), label='已有知识库')
+            b = gr.Dropdown(choices=list(input_value.keys()), label="上下文知识")
+            c = input_value
+            d = gr.Dropdown(choices=list(input_value.keys()), label="检索范围")
+            return a, b, c, d
 # demo.launch(server_name='0.0.0.0')
 
 # auth_manager = AuthManager(user_password_info_dict_path)
