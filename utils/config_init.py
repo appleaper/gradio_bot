@@ -93,18 +93,13 @@ voice_chunk_size = conf_yaml['rag']['parse_voice']['voice_chunk_size']
 
 
 
-
-
-'''video配置'''
-video_mark_dir = os.path.join(data_dir, 'video_mark')
-translation_dir = os.path.join(video_mark_dir, 'translation')
-video_cut_save_dir = os.path.join(video_mark_dir, 'video_cut')
-video_cut_record_path = os.path.join(video_cut_save_dir, 'video_cut_record.txt')
-video_mark_csv_path = os.path.join(video_mark_dir, 'adult_video', 'movie_mark.csv')
-video_translation_title_csv_path = os.path.join(translation_dir, 'translation.csv')
-video_need_translation_title_path = os.path.join(translation_dir, 'need_translation.txt')
-
-
+'''mysql配置'''
+mysql_host = conf_yaml['mysql']['host']
+mysql_port = conf_yaml['mysql']['port']
+mysql_user = conf_yaml['mysql']['user']
+mysql_password = conf_yaml['mysql']['password']
+mysql_database_name = conf_yaml['mysql']['database_name']
+mysql_article_table_info_name = conf_yaml['mysql']['article_table_name']
 
 database_dir, articles_user_path, kb_article_map_path = get_database_config()
 

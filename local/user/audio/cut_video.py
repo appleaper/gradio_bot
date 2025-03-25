@@ -1,8 +1,7 @@
 import os.path
 import subprocess
 import gradio as gr
-from config import conf_yaml
-from utils.config_init import video_cut_save_dir, video_cut_record_path
+from local.ui.adult_ui import video_cut_save_dir, video_cut_record_path
 
 def time_to_seconds(time_string):
     hours, minutes, seconds = map(int, time_string.split(':'))

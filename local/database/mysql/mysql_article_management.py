@@ -161,22 +161,31 @@ class MySQLDatabase:
         except pymysql.Error as e:
             print(f"删除数据时出错: {e}")
 
-    def select_data(self, table_name, user_id, input_text):
+    def select_by_userid_group_articleid(self, input_text, search_range, tok_k, user_name):
+        '''
+        根据用户id，文章范围，搜索的关键词，返回tok_k条相关记录
+        :param input_text: 搜索的关键词
+        :param search_range: 搜索范围
+        :param tok_k: 返回条数
+        :param user_name: 用户名
+        :return:
+        '''
+        pass
+
+    def select_data(self, table_name, user_id, input_text, article_id_list, limit=3):
         '''查询数据'''
         if self.connection is None:
             print("请先连接到数据库")
             return
         try:
             with self.connection.cursor() as cursor:
-                select_query = f"SELECT * FROM {table_name} WHERE user_id = %s AND (LOWER(title) LIKE %s OR LOWER(content) LIKE %s)"
+                placeholders = ', '.join(['%s'] * len(article_id_list))
+                select_query = f"SELECT * FROM {table_name} WHERE user_id = %s AND article_id IN ({placeholders}) AND (LOWER(title) LIKE %s OR LOWER(content) LIKE %s) LIMIT %s"
                 search_pattern = f"%{input_text.lower()}%"
-                cursor.execute(select_query, (user_id, search_pattern, search_pattern))
+                params = (user_id, *article_id_list, search_pattern, search_pattern, limit)
+                cursor.execute(select_query, params)
                 results = cursor.fetchall()
-                if not results:
-                    print(f"未找到 user_id = {user_id} 且包含关键字 {input_text} 的符合条件的数据。")
-                else:
-                    for row in results:
-                        print(row)
+                return results
         except pymysql.Error as e:
             print(f"查询数据时出错: {e}")
 

@@ -9,6 +9,8 @@ from utils.tool import encrypt_username,read_user_info_dict, reverse_dict
 from local.database.milvus.milvus_article_management import MilvusArticleManager
 
 from local.chat_model.chat_do import add_rag_info, database_dir, kb_article_map_path, articles_user_path
+from utils.config_init import mysql_user,mysql_host,mysql_port,mysql_password, mysql_database_name, mysql_article_table_info_name
+
 
 def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, user_name):
     '''
@@ -52,6 +54,13 @@ def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, us
         result_list.append(info)
     return pd.DataFrame(result_list)
 
+def get_info_from_mysql(search_content, search_range, top_k, user_name):
+    top_k = int(top_k)
+    all_knowledge_bases_record = read_user_info_dict(user_name, kb_article_map_path)
+    inverted_dict = reverse_dict(read_user_info_dict(user_name, articles_user_path))
+    mysql_database = MySQLDatabase(host=mysql_host, user=mysql_user, password=mysql_password, port=mysql_port)
+    mysql_database.select_data(mysql_database_name)
+    print(1)
 
 
 def search_data_from_database_do(search_type, search_content, search_range, search_tok_k, request: gr.Request):
@@ -61,7 +70,7 @@ def search_data_from_database_do(search_type, search_content, search_range, sear
         rag_df = get_info_from_vector(search_content, search_range, rag_model, database_dir, search_tok_k, user_name)
         return rag_df
     elif search_type =='mysql搜索':
-        mysql_database = MySQLDatabase()
+        get_info_from_mysql(search_content, search_range, search_tok_k, user_name)
     else:
         raise gr.Error('暂时不支持')
 

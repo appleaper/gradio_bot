@@ -1,25 +1,13 @@
 import os
 import random
 
-import fsspec.implementations.webhdfs
 import gradio as gr
 import pandas as pd
-from config import conf_yaml
-from video.title_translation import get_translation_title, contains_chinese_or_japanese
-from utils.config_init import video_mark_csv_path
+from local.user.audio.title_translation import get_translation_title, contains_chinese_or_japanese
+from local.ui.adult_ui import (clothing_dict, action_dict,
+                               scene_dict, other_dict, video_need_translation_title_path,
+                               root_dir, video_mark_csv_path, start_score_list)
 
-root_dir = conf_yaml['video']['root_dir']
-start_score_list = conf_yaml['video']['start_score']
-clothing_dict = conf_yaml['video']['clothing']
-action_dict = conf_yaml['video']['action']
-scene_dict = conf_yaml['video']['scene']
-other_dict = conf_yaml['video']['other']
-label_dict = {
-    'clothing':clothing_dict,
-    'action':action_dict,
-    'scene':scene_dict,
-    'other':other_dict
-}
 
 translation_title_dict = get_translation_title()
 
@@ -62,7 +50,7 @@ def get_translation_name(random_mp4_name):
     '''返回翻译后的名字'''
     if random_mp4_name not in translation_title_dict:
         if contains_chinese_or_japanese(random_mp4_name):
-            with open(conf_yaml['video']['need_translation_title_path'], 'a', encoding='utf8') as f:
+            with open(video_need_translation_title_path, 'a', encoding='utf8') as f:
                 f.writelines(random_mp4_name + '\n')
             return random_mp4_name
         else:

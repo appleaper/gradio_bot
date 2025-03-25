@@ -30,63 +30,16 @@ rag:
   top_k: 10
   max_rag_len: 10000
 
+mysql:
+  host: 'localhost'
+  user: 'root'
+  password: 'root'
+  port: 3310
+  database_name: 'gradio_bot'
+  article_table_name: 'article_info'
 
 user:
   user_password_info_dict_path: 'auth.json'
 
 ui_conf:
   default_system: 'You are a helpful assistant.'
-
-video:
-  root_dir: '/media/pandas/video/video'
-  breast_size:
-    - 巨乳
-    - 中大
-    - 中乳
-    - 中小
-    - 小乳
-  start_score:
-    - 1分
-    - 2分
-    - 2.5分
-    - 3分
-    - 3.5分
-    - 4分
-    - 5分
-  clothing:
-    high_heel: 高根
-    silk_stockings: 丝袜
-    maid_outfit: 女仆装
-    school_uniform: 学生装
-    office_lady: ol
-    erotic: 情趣
-    bunny_girl: 兔女郎
-    daily_clothes: 常服
-  action:
-    oral_sex: 口交
-    breast_sex: 乳交
-    doggy_style: 后入
-    missionary_position: 前入
-    lotus_position: 坐莲
-    foreplay: 前戏
-  scene:
-    office: 办公室
-    school: 学校
-    bubble_bath: 泡泡浴
-    adult_entertainment_establishment: 风俗店
-    home: 家里
-    hotel: 酒店
-    photography_studio: 拍摄棚
-    Bathroom: 卫生间
-    washroom: 浴室
-    outdoorL: 户外
-  other:
-    multi_person: 多人
-    chinese_subtitles: 中字
-    tiktok: 抖音
-    invasion: 侵犯
-    first_person_perspective: 第一视角
-    infidelity: 出轨
-    uncensored: 无码
-    housewife: 人妻
-    transparent: 透明

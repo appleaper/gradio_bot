@@ -3,7 +3,7 @@ import re
 import pandas as pd
 from tqdm import tqdm
 from local.qwen.qwen_api import qwen_model_init, qwen_model_detect
-from utils.config_init import video_translation_title_csv_path
+from local.ui.adult_ui import video_translation_title_csv_path
 
 def contains_chinese_or_japanese(text):
     # 正则表达式匹配日文假名字符

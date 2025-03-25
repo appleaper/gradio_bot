@@ -1,17 +1,48 @@
-
+import os.path
+import yaml
 import gradio as gr
-from config import conf_yaml
-from video.video_play import load_local_video, mark_video_like
-from video.shutdown_computer import shutdown_computer
-from video.cut_video import video_cut
+
+from utils.shutdown_computer import shutdown_computer
+from local.user.audio.cut_video import video_cut
+
+from utils.config_init import config_dir
+audio_config_yaml_path = os.path.join(config_dir, 'audio.yaml')
 # -----------------video----------------------------
+with open(audio_config_yaml_path, 'r', encoding='utf8') as file:
+    conf_yaml = yaml.safe_load(file)
+
 video_score_list = conf_yaml['video']['start_score']
 breast_size_list = conf_yaml['video']['breast_size']
 clothing_list = list(conf_yaml['video']['clothing'].values())
 action_list = list(conf_yaml['video']['action'].values())
 scene_list = list(conf_yaml['video']['scene'].values())
 other_list = list(conf_yaml['video']['other'].values())
+'''video配置'''
+data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),'data')
+video_mark_dir = os.path.join(data_dir, 'video_mark')
+translation_dir = os.path.join(video_mark_dir, 'translation')
+video_cut_save_dir = os.path.join(video_mark_dir, 'video_cut')
+video_cut_record_path = os.path.join(video_cut_save_dir, 'video_cut_record.txt')
+video_mark_csv_path = os.path.join(video_mark_dir, 'adult_video', 'movie_mark.csv')
+video_translation_title_csv_path = os.path.join(translation_dir, 'translation.csv')
+video_need_translation_title_path = os.path.join(translation_dir, 'need_translation.txt')
 
+
+root_dir = conf_yaml['video']['root_dir']
+start_score_list = conf_yaml['video']['start_score']
+clothing_dict = conf_yaml['video']['clothing']
+action_dict = conf_yaml['video']['action']
+scene_dict = conf_yaml['video']['scene']
+other_dict = conf_yaml['video']['other']
+label_dict = {
+    'clothing':clothing_dict,
+    'action':action_dict,
+    'scene':scene_dict,
+    'other':other_dict
+}
+
+
+from local.user.audio.video_play import load_local_video, mark_video_like
 def adult_ui_show():
     gr.Markdown("# Local Video Player")
     video_output = gr.Video(label="Play Local Video")
