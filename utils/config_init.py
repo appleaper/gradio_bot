@@ -57,17 +57,24 @@ database_type = conf_yaml['rag']['database']['choise']
 
 '''lancedb配置相关'''
 lancedb_data_dir = os.path.join(database_dir, 'lancedb')
-lancedb_articles_user_filename = conf_yaml['rag']['database']['lancedb']['save']['articles_user_path']
-lancedb_kb_article_map_filename = conf_yaml['rag']['database']['lancedb']['save']['kb_article_map_path']
-lancedb_articles_user_path = os.path.join(lancedb_data_dir, lancedb_articles_user_filename)
-lancedb_kb_article_map_path = os.path.join(lancedb_data_dir, lancedb_kb_article_map_filename)
+lancedb_articles_user_path = os.path.join(lancedb_data_dir, 'user_article_mapping.json')
+lancedb_kb_article_map_path = os.path.join(lancedb_data_dir, 'kb_article_mappping.json')
 
 '''milvus配置相关'''
 milvus_data_dir = os.path.join(database_dir, 'milvus')
-milvus_articles_user_filename = conf_yaml['rag']['database']['milvus']['save']['articles_user_path']
-milvus_kb_article_map_filename = conf_yaml['rag']['database']['milvus']['save']['kb_article_map_path']
-milvus_articles_user_path = os.path.join(milvus_data_dir, milvus_articles_user_filename)
-milvus_kb_article_map_path = os.path.join(milvus_data_dir, milvus_kb_article_map_filename)
+milvus_articles_user_path = os.path.join(milvus_data_dir, 'user_article_mapping.json')
+milvus_kb_article_map_path = os.path.join(milvus_data_dir, 'kb_article_mappping.json')
+
+'''mysql配置'''
+mysql_host = conf_yaml['mysql']['host']
+mysql_port = conf_yaml['mysql']['port']
+mysql_user = conf_yaml['mysql']['user']
+mysql_password = conf_yaml['mysql']['password']
+mysql_database_name = conf_yaml['mysql']['database_name']
+mysql_data_dir = os.path.join(database_dir, 'mysql')
+mysql_article_table_info_name = conf_yaml['mysql']['article_table_name']
+mysql_articles_user_path = os.path.join(mysql_data_dir, 'user_article_mapping.json')
+mysql_kb_article_map_path = os.path.join(mysql_data_dir, 'kb_article_mappping.json')
 
 '''用户配置'''
 config_dir = os.path.join(project_dir, 'config')
@@ -84,6 +91,10 @@ def get_database_config():
         database_dir = ''
         articles_user_path = milvus_articles_user_path
         kb_article_map_path = milvus_kb_article_map_path
+    elif database_type == 'mysql':
+        database_dir = ''
+        articles_user_path = milvus_articles_user_path
+        kb_article_map_path = milvus_kb_article_map_path
     else:
         assert False, f"{database_type} not support!"
     return database_dir, articles_user_path, kb_article_map_path
@@ -91,19 +102,10 @@ def get_database_config():
 '''parse voice config'''
 voice_chunk_size = conf_yaml['rag']['parse_voice']['voice_chunk_size']
 
-
-
-'''mysql配置'''
-mysql_host = conf_yaml['mysql']['host']
-mysql_port = conf_yaml['mysql']['port']
-mysql_user = conf_yaml['mysql']['user']
-mysql_password = conf_yaml['mysql']['password']
-mysql_database_name = conf_yaml['mysql']['database_name']
-mysql_article_table_info_name = conf_yaml['mysql']['article_table_name']
-
 database_dir, articles_user_path, kb_article_map_path = get_database_config()
 
 def init_article_user_and_kb_mapping_file(articles_user_path, kb_article_map_path):
+    '''创建user_article_mapping.json和kb_article_mappping.json文件'''
     user_info_dict = read_json_file(user_password_info_dict_path)
     if os.path.exists(articles_user_path):
         pass

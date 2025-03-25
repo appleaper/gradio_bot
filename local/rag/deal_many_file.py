@@ -75,6 +75,7 @@ def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, r
         else:
             manager.create_collection(user_id)
             save_df = manager.insert_data_to_milvus(df, user_id)
+        save_df['database_type'] = database_type
         save_rag_group_csv_name(save_df, rag_data_csv_dir, id, articles_user_path, user_name)
         progress(round((file_index + 1) / len(rag_upload_files), 2))
     return articles_user_mapping_dict[user_name], None, None, []

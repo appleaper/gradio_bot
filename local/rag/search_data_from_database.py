@@ -12,7 +12,7 @@ from local.chat_model.chat_do import add_rag_info, database_dir, kb_article_map_
 from utils.config_init import mysql_user,mysql_host,mysql_port,mysql_password, mysql_database_name, mysql_article_table_info_name
 
 
-def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, user_name):
+def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, user_name, database_type):
     '''
     暂时去掉了模型审核内容是否相关的部分
     :param textbox: 用户提问
@@ -59,17 +59,29 @@ def get_info_from_mysql(search_content, search_range, top_k, user_name):
     all_knowledge_bases_record = read_user_info_dict(user_name, kb_article_map_path)
     inverted_dict = reverse_dict(read_user_info_dict(user_name, articles_user_path))
     mysql_database = MySQLDatabase(host=mysql_host, user=mysql_user, password=mysql_password, port=mysql_port)
-    mysql_database.select_data(mysql_database_name)
+    article_name_list = all_knowledge_bases_record[search_range]
+    article_id_list = []
+    user_id = encrypt_username(user_name)
+    for article_name in article_name_list:
+        article_id_list.append(inverted_dict[article_name])
+    mysql_database.connect()
+    mysql_database.use_database(mysql_database_name)
+    mysql_database.select_data(mysql_article_table_info_name, user_id, search_content, article_id_list, top_k)
     print(1)
 
 
-def search_data_from_database_do(search_type, search_content, search_range, search_tok_k, request: gr.Request):
+def search_data_from_database_do(database_type, search_content, search_range, search_tok_k, request: gr.Request):
     user_name = request.username
-    if search_type=='向量搜索':
+    if database_type=='lancedb数据库':
         rag_model, rag_tokenizer = load_rag_model('bge_m3')
-        rag_df = get_info_from_vector(search_content, search_range, rag_model, database_dir, search_tok_k, user_name)
+        rag_df = get_info_from_vector(search_content, search_range, rag_model, database_dir, search_tok_k, user_name, 'lancedb')
         return rag_df
-    elif search_type =='mysql搜索':
+    elif database_type == 'milvus数据库':
+        rag_model, rag_tokenizer = load_rag_model('bge_m3')
+        rag_df = get_info_from_vector(search_content, search_range, rag_model, database_dir, search_tok_k, user_name,
+                                      'milvus')
+        return rag_df
+    elif database_type =='mysql数据库':
         get_info_from_mysql(search_content, search_range, search_tok_k, user_name)
     else:
         raise gr.Error('暂时不支持')

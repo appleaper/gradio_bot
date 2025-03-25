@@ -183,6 +183,7 @@ class MySQLDatabase:
                 select_query = f"SELECT * FROM {table_name} WHERE user_id = %s AND article_id IN ({placeholders}) AND (LOWER(title) LIKE %s OR LOWER(content) LIKE %s) LIMIT %s"
                 search_pattern = f"%{input_text.lower()}%"
                 params = (user_id, *article_id_list, search_pattern, search_pattern, limit)
+                print("执行的 SQL 语句:", select_query)
                 cursor.execute(select_query, params)
                 results = cursor.fetchall()
                 return results

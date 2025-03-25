@@ -30,12 +30,6 @@ def save_rag_name_dict(pdf_name, history_rag_dict, rag_list_config_path):
         json.dump(history_rag_dict, json_file, indent=4, ensure_ascii=False)  # 使用indent参数美化输出
     return id
 
-def save_rag_csv_name(df, rag_data_csv_dir, id, rag_list_config_path):
-    history_rag_dict = read_rag_name_dict(rag_list_config_path)
-    csv_name = history_rag_dict[id]
-    save_path = os.path.join(rag_data_csv_dir, csv_name + '.csv')
-    df.to_csv(save_path, index=False, encoding='utf8')
-    return save_path
 
 def write_rag_name_dict(path, rag_dict):
     with open(path, 'w', encoding='utf8') as json_file:

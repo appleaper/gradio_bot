@@ -1,4 +1,6 @@
 import os
+from random import choices
+
 import gradio as gr
 import pandas as pd
 from config import conf_yaml
@@ -37,9 +39,11 @@ with gr.Blocks() as demo:
                 default_history = []
                 history_state = gr.State(value=default_history)
                 with gr.Row():
-                    model_type = gr.Dropdown(list(chat_model_dict.keys()), label="model type")
-                    model_name = gr.Dropdown([], label="model name")
-                    steam_check_box = gr.CheckboxGroup(["流式输出"], label="输出形式")
+                    model_type = gr.Dropdown(list(chat_model_dict.keys()), label="模型厂商")
+                    model_name = gr.Dropdown([], label="模型具体型号")
+                    steam_check_box = gr.CheckboxGroup(
+                        choices=["流式输出"], value=['流式输出'], label="输出形式", visible=False)
+
 
                 @model_type.change(inputs=model_type, outputs=model_name)
                 def update_cities(model_type):
@@ -64,12 +68,12 @@ with gr.Blocks() as demo:
 
                 textbox.submit(local_chat,
                                inputs=[textbox, chatbot, system_input, history_state, model_type, model_name,
-                                       steam_check_box, book_type],
+                                       book_type],
                                outputs=[textbox, chatbot, history_state])
 
                 sumbit.click(local_chat,
                              inputs=[textbox, chatbot, system_input, history_state, model_type, model_name,
-                                     steam_check_box, book_type],
+                                     book_type],
                              outputs=[textbox, chatbot, history_state])
 
                 clear_history.click(fn=clear_session,
@@ -155,7 +159,7 @@ with gr.Blocks() as demo:
 
             with gr.TabItem('搜索'):
                 with gr.Row():
-                    search_type = gr.Dropdown(choices=['向量搜索','mysql搜索','es搜索'], scale=1, label='检索类型')
+                    search_type = gr.Dropdown(choices=['lancedb数据库','milvus数据库','mysql数据库','es数据库可'], scale=1, label='要检索的数据库')
                     search_database = gr.Dropdown(choices=[], label='检索范围')
                     search_tok_k = gr.Textbox(value='3', label='返回多少条结果')
                 with gr.Row():

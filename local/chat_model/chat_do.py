@@ -84,7 +84,7 @@ def add_rag_info(textbox, book_type, rag_model, database_name, top_k, user_name)
     return rag_str
 
 
-def local_chat(textbox, show_history, system_state, history, model_type, parm_b, steam_check_box, book_type, request: gr.Request):
+def local_chat(textbox, show_history, system_state, history, model_type, parm_b, book_type, request: gr.Request):
     '''
 
     :param textbox: 用户提问
@@ -123,55 +123,37 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
         model, tokenizer = load_model_cached(model_name)
     else:
         model, tokenizer = None, None
-    if len(steam_check_box) == 0:
-        if model_name in qwen_support_list and steam_check_box==[]:
-            response_message = qwen_model_detect(history, model, tokenizer)
-        elif model_name == 'llama3-8b' and steam_check_box==[]:
-            response_message = llama3_model_detect(history, model, tokenizer)
-        elif model_name == 'MiniCPM3-4B' and steam_check_box == []:
-            response_message = minicpm_model_detect(history, model, tokenizer)
-        elif model_name in ollama_support_list and steam_check_box == []:
-            res = ollama.chat(model=parm_b, messages=history)
-            response_message = res.message.content
-        else:
-            gr.Error(f'{model_name} not support!')
-            assert False, 'model name not support!'
-        response_dict = {'role': 'assistant', 'content': response_message}
-        history.append(response_dict)
-        show_history.append((textbox, response_message))
-        yield '', show_history, history
+    if model_name in qwen_support_list:
+        conversion = tokenizer.apply_chat_template(history, add_generation_prompt=True, tokenize=False)
+        model_inputs = tokenizer(conversion, return_tensors="pt").to(device_str)
+        streamer = TextIteratorStreamer(tokenizer)
+        generation_kwargs = dict(model_inputs, streamer=streamer, max_new_tokens=512)
+        thread = Thread(target=model.generate, kwargs=generation_kwargs)
+        thread.start()
+        response = ''
+        show_history.append(())
+        for new_text in streamer:
+            output = new_text.replace(conversion, '')
+            if output:
+                if output.endswith('<|im_end|>'):
+                    output = output.replace('<|im_end|>', '')
+                    history.append({'role': 'assistant', 'content': response})
+                show_history[-1] = (textbox,response)
+                response += output
+                yield '', show_history, history
+    elif model_name in ollama_support_list:
+        stream = chat(
+            model=parm_b,
+            messages=history,
+            stream=True,
+        )
+        show_history.append(())
+        output_str = ''
+        for chunk in stream:
+            response = chunk['message']['content']
+            show_history[-1] = (textbox, output_str)
+            output_str += response
+            yield '', show_history, []
     else:
-        if model_name in qwen_support_list and len(steam_check_box)!=0 and steam_check_box[0]=='流式输出':
-            conversion = tokenizer.apply_chat_template(history, add_generation_prompt=True, tokenize=False)
-            model_inputs = tokenizer(conversion, return_tensors="pt").to(device_str)
-            streamer = TextIteratorStreamer(tokenizer)
-            generation_kwargs = dict(model_inputs, streamer=streamer, max_new_tokens=512)
-            thread = Thread(target=model.generate, kwargs=generation_kwargs)
-            thread.start()
-            response = ''
-            show_history.append(())
-            for new_text in streamer:
-                output = new_text.replace(conversion, '')
-                if output:
-                    if output.endswith('<|im_end|>'):
-                        output = output.replace('<|im_end|>', '')
-                        history.append({'role': 'assistant', 'content': response})
-                    show_history[-1] = (textbox,response)
-                    response += output
-                    yield '', show_history, history
-        elif model_name in ollama_support_list and len(steam_check_box)!=0 and steam_check_box[0]=='流式输出':
-            stream = chat(
-                model=parm_b,
-                messages=history,
-                stream=True,
-            )
-            show_history.append(())
-            output_str = ''
-            for chunk in stream:
-                response = chunk['message']['content']
-                show_history[-1] = (textbox, output_str)
-                output_str += response
-                yield '', show_history, []
-        else:
-            gr.Error(f'{model_name} not support')
-            assert False, 'model name not support!'
+        gr.Error(f'{model_name} not support')
+        assert False, 'model name not support!'

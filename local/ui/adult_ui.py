@@ -2,9 +2,6 @@ import os.path
 import yaml
 import gradio as gr
 
-from utils.shutdown_computer import shutdown_computer
-from local.user.audio.cut_video import video_cut
-
 from utils.config_init import config_dir
 audio_config_yaml_path = os.path.join(config_dir, 'audio.yaml')
 # -----------------video----------------------------
@@ -43,6 +40,9 @@ label_dict = {
 
 
 from local.user.audio.video_play import load_local_video, mark_video_like
+from local.user.audio.cut_video import video_cut
+from utils.shutdown_computer import shutdown_computer
+
 def adult_ui_show():
     gr.Markdown("# Local Video Player")
     video_output = gr.Video(label="Play Local Video")
