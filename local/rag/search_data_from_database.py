@@ -2,6 +2,7 @@ import lancedb
 import numpy as np
 import gradio as gr
 import pandas as pd
+from local.database.mysql.mysql_article_management import MySQLDatabase
 from utils.config_init import database_type
 from local.embedding_model.embedding_init import load_rag_model
 from utils.tool import encrypt_username,read_user_info_dict, reverse_dict
@@ -58,8 +59,9 @@ def search_data_from_database_do(search_type, search_content, search_range, sear
     if search_type=='向量搜索':
         rag_model, rag_tokenizer = load_rag_model('bge_m3')
         rag_df = get_info_from_vector(search_content, search_range, rag_model, database_dir, search_tok_k, user_name)
-
         return rag_df
+    elif search_type =='mysql搜索':
+        mysql_database = MySQLDatabase()
     else:
         raise gr.Error('暂时不支持')
 

@@ -14,12 +14,19 @@ cn2an>=0.5.23
 peft>=0.14.0
 sentencepiece>=0.2.0
 pymilvus>=2.5.5
+
 # 下面这些是为多模态准备的
 torchvision>=0.19.1
 http://thunlp.oss-cn-qingdao.aliyuncs.com/multi_modal/never_delete/modelscope_studio-0.4.0.9-py3-none-any.whl
 bitsandbytes>=0.43.2
+
 # StepfunOcr算法OCR识别需要的
 verovio>=5.1.0
 tiktoken>=0.9.0
+
 # ollama调用
 ollama>=0.4.7
+
+# mysql组件
+pymysq>=-1.1.1
+cryptography>=44.0.2

@@ -1,20 +1,19 @@
 import os
 import gradio as gr
 import pandas as pd
-
-from local.chat_model.chat_do import local_chat
-
-
 from config import conf_yaml
-from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
-from local.ui.adult_ui import adult_ui_show
 from local.ui.ocr_ui import ocr_ui_show
-from local.voice.speech_recognition_do import speech_recognition
+from local.ui.adult_ui import adult_ui_show
+from local.ui.voice_ui import voice_ui_show
 from utils.plot_data import create_pie_chart
+from local.chat_model.chat_do import local_chat
+from utils.tool import read_user_info_dict, read_md_doc
+from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
+from utils.config_init import get_database_config, chat_model_dict, tmp_dir_path
 from local.rag.deal_many_file import deal_mang_knowledge_files, add_group_database, delete_group_database, delete_article_from_database
 from local.rag.search_data_from_database import search_data_from_database_do, get_user_select_info
-from utils.tool import read_user_info_dict, read_md_doc
-from utils.config_init import get_database_config, chat_model_dict, tmp_dir_path
+
+
 
 default_system = conf_yaml['ui_conf']['default_system']
 database_dir, articles_user_path, kb_article_map_path = get_database_config()
@@ -156,7 +155,7 @@ with gr.Blocks() as demo:
 
             with gr.TabItem('搜索'):
                 with gr.Row():
-                    search_type = gr.Dropdown(choices=['向量搜索','es搜索'], scale=1, label='检索类型')
+                    search_type = gr.Dropdown(choices=['向量搜索','mysql搜索','es搜索'], scale=1, label='检索类型')
                     search_database = gr.Dropdown(choices=[], label='检索范围')
                     search_tok_k = gr.Textbox(value='3', label='返回多少条结果')
                 with gr.Row():
@@ -198,11 +197,7 @@ with gr.Blocks() as demo:
             ocr_ui_show()
 
         with gr.TabItem('语音识别'):
-            with gr.Row():
-                speech_recognition_file = gr.File(label='上传一个mp3')
-            with gr.Row():
-                speech_recognition_output_text = gr.Textbox(label='语音转文字结果', show_copy_button=True)
-            speech_recognition_file.upload(speech_recognition, inputs=speech_recognition_file, outputs=[speech_recognition_output_text, speech_recognition_file])
+            voice_ui_show()
 
         @kb_article_dict_state.change(
             inputs=kb_article_dict_state,
@@ -218,6 +213,7 @@ with gr.Blocks() as demo:
             c = input_value
             d = gr.Dropdown(choices=list(input_value.keys()), label="检索范围")
             return a, b, c, d
+
 # demo.launch(server_name='0.0.0.0')
 
 # auth_manager = AuthManager(user_password_info_dict_path)
