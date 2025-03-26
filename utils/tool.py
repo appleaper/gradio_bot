@@ -7,6 +7,14 @@ import hashlib
 import pandas as pd
 import pickle as pkl
 
+def singleton(cls):
+    instances = {}
+    def wrapper(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+    return wrapper
+
 def generate_unique_filename(extension='jpg'):
     unique_filename = str(uuid.uuid4()) + '.' + extension
     return unique_filename

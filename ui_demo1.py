@@ -9,30 +9,24 @@ from local.ui.adult_ui import adult_ui_show
 from local.ui.voice_ui import voice_ui_show
 from utils.plot_data import create_pie_chart
 from local.chat_model.chat_do import local_chat
-from utils.tool import read_user_info_dict, read_md_doc
+from utils.tool import read_md_doc
 from local.MiniCPM.minicpm_vl_detect.chat import minicpm_ui
-from utils.config_init import get_database_config, chat_model_dict, tmp_dir_path
+from utils.config_init import chat_model_dict, tmp_dir_path, akb_conf_class
 from local.rag.deal_many_file import deal_mang_knowledge_files, add_group_database, delete_group_database, delete_article_from_database
 from local.rag.search_data_from_database import search_data_from_database_do, get_user_select_info
 
-
-
 default_system = conf_yaml['ui_conf']['default_system']
-database_dir, articles_user_path, kb_article_map_path = get_database_config()
 os.environ["GRADIO_TEMP_DIR"] = tmp_dir_path
+
+
 
 def clear_session():
     return '', [], []
 
-def get_username(request: gr.Request):
-    article_dict = read_user_info_dict(request.username, articles_user_path)       # id:value
-    kb_article_dict = read_user_info_dict(request.username, kb_article_map_path)
-    return article_dict, kb_article_dict
-
 with gr.Blocks() as demo:
     article_dict_state = gr.JSON({}, visible=False)
     kb_article_dict_state = gr.JSON({}, visible=False)
-    demo.load(get_username, None, [article_dict_state, kb_article_dict_state])
+    demo.load(akb_conf_class.get_username, None, [article_dict_state, kb_article_dict_state])
     with gr.Tabs():
         with gr.TabItem("聊天机器人"):
             with gr.TabItem("本地文字"):
@@ -41,9 +35,7 @@ with gr.Blocks() as demo:
                 with gr.Row():
                     model_type = gr.Dropdown(list(chat_model_dict.keys()), label="模型厂商")
                     model_name = gr.Dropdown([], label="模型具体型号")
-                    steam_check_box = gr.CheckboxGroup(
-                        choices=["流式输出"], value=['流式输出'], label="输出形式", visible=False)
-
+                    chat_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库')
 
                 @model_type.change(inputs=model_type, outputs=model_name)
                 def update_cities(model_type):
@@ -68,12 +60,12 @@ with gr.Blocks() as demo:
 
                 textbox.submit(local_chat,
                                inputs=[textbox, chatbot, system_input, history_state, model_type, model_name,
-                                       book_type],
+                                       book_type, chat_database_type],
                                outputs=[textbox, chatbot, history_state])
 
                 sumbit.click(local_chat,
                              inputs=[textbox, chatbot, system_input, history_state, model_type, model_name,
-                                     book_type],
+                                     book_type, chat_database_type],
                              outputs=[textbox, chatbot, history_state])
 
                 clear_history.click(fn=clear_session,
@@ -89,8 +81,9 @@ with gr.Blocks() as demo:
 
             with gr.TabItem('rag'):
                 with gr.Row():
+                    rag_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库')
+                with gr.Row():
                     rag_checkboxgroup = gr.CheckboxGroup(choices=[], label="rag列表")
-
                 with gr.Row():
                     with gr.Column(scale=1):
                         rag_delete_button = gr.Button(value='删除')
@@ -109,6 +102,8 @@ with gr.Blocks() as demo:
                 )
 
             with gr.TabItem('知识库'):
+                with gr.Row():
+                    kb_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库')
                 # 可选文章复选框组
                 selectable_documents_checkbox_group = gr.CheckboxGroup(
                     choices=[], label='可选文章'
@@ -134,13 +129,13 @@ with gr.Blocks() as demo:
                 # 删除知识库按钮点击事件
                 delete_knowledge_base_button.click(
                     delete_group_database,
-                    inputs=[selectable_knowledge_bases_checkbox_group],
+                    inputs=[selectable_knowledge_bases_checkbox_group, kb_database_type],
                     outputs=[selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table,
                              kb_article_dict_state]
                 )
                 rag_delete_button.click(
                     delete_article_from_database,
-                    inputs=[rag_checkboxgroup, article_dict_state],
+                    inputs=[rag_checkboxgroup, article_dict_state, kb_article_dict_state],
                     outputs=[article_dict_state, knowledge_base_info_json_table]
                 )
 
@@ -159,7 +154,7 @@ with gr.Blocks() as demo:
 
             with gr.TabItem('搜索'):
                 with gr.Row():
-                    search_type = gr.Dropdown(choices=['lancedb数据库','milvus数据库','mysql数据库','es数据库可'], scale=1, label='要检索的数据库')
+                    search_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库')
                     search_database = gr.Dropdown(choices=[], label='检索范围')
                     search_tok_k = gr.Textbox(value='3', label='返回多少条结果')
                 with gr.Row():
@@ -176,12 +171,12 @@ with gr.Blocks() as demo:
 
                 search_button.click(
                     search_data_from_database_do,
-                    inputs=[search_type, search_text, search_database, search_tok_k],
+                    inputs=[search_database_type, search_text, search_database, search_tok_k],
                     outputs = [search_show]
                 )
                 search_text.submit(
                     search_data_from_database_do,
-                    inputs=[search_type, search_text, search_database, search_tok_k],
+                    inputs=[search_database_type, search_text, search_database, search_tok_k],
                     outputs=[search_show]
                 )
                 search_show.select(
@@ -193,6 +188,26 @@ with gr.Blocks() as demo:
             with gr.TabItem('ToDo'):
                 need_to_do_string = read_md_doc('计划和目前的bug.md')
                 gr.Markdown(need_to_do_string)
+            @chat_database_type.change(
+                inputs=chat_database_type,
+                outputs=[rag_database_type, kb_database_type, search_database_type, article_dict_state, kb_article_dict_state])
+            def chat_database_type_change_1(input, request:gr.Request):
+                return akb_conf_class.database_type_dropdowns(input, request)
+            @rag_database_type.change(
+                inputs=rag_database_type,
+                outputs=[chat_database_type, kb_database_type, search_database_type, article_dict_state, kb_article_dict_state])
+            def chat_database_type_change_2(input, request:gr.Request):
+                return akb_conf_class.database_type_dropdowns(input, request)
+            @kb_database_type.change(
+                inputs=kb_database_type,
+                outputs=[chat_database_type, rag_database_type, search_database_type, article_dict_state, kb_article_dict_state])
+            def chat_database_type_change_3(input, request:gr.Request):
+                return akb_conf_class.database_type_dropdowns(input, request)
+            @search_database_type.change(
+                inputs=search_database_type,
+                outputs=[chat_database_type, rag_database_type, kb_database_type, article_dict_state, kb_article_dict_state])
+            def chat_database_type_change_4(input, request:gr.Request):
+                return akb_conf_class.database_type_dropdowns(input, request)
 
         with gr.TabItem("本地视频播放"):
             adult_ui_show()

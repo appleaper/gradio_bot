@@ -1,7 +1,9 @@
 import os
 import torch
+import gradio as gr
 from config import conf_yaml
-from utils.tool import save_json_file, read_json_file, get_ollama_model_list
+from utils.tool import read_user_info_dict, singleton
+from utils.tool import save_json_file, read_json_file
 
 
 project_dir = os.path.dirname(os.path.dirname(__file__))
@@ -51,76 +53,118 @@ rag_data_csv_dir = os.path.join(data_dir, 'rag', 'data_csv')
 tmp_dir_path = os.path.join(data_dir, 'tmp')
 font_path = os.path.join(data_dir, 'ocr', 'font', 'SimHei.ttf')
 
-'''数据库相关'''
-database_dir = os.path.join(data_dir, 'database')
-database_type = conf_yaml['rag']['database']['choise']
 
-'''lancedb配置相关'''
-lancedb_data_dir = os.path.join(database_dir, 'lancedb')
-lancedb_articles_user_path = os.path.join(lancedb_data_dir, 'user_article_mapping.json')
-lancedb_kb_article_map_path = os.path.join(lancedb_data_dir, 'kb_article_mappping.json')
 
-'''milvus配置相关'''
-milvus_data_dir = os.path.join(database_dir, 'milvus')
-milvus_articles_user_path = os.path.join(milvus_data_dir, 'user_article_mapping.json')
-milvus_kb_article_map_path = os.path.join(milvus_data_dir, 'kb_article_mappping.json')
-
-'''mysql配置'''
-mysql_host = conf_yaml['mysql']['host']
-mysql_port = conf_yaml['mysql']['port']
-mysql_user = conf_yaml['mysql']['user']
-mysql_password = conf_yaml['mysql']['password']
-mysql_database_name = conf_yaml['mysql']['database_name']
-mysql_data_dir = os.path.join(database_dir, 'mysql')
-mysql_article_table_info_name = conf_yaml['mysql']['article_table_name']
-mysql_articles_user_path = os.path.join(mysql_data_dir, 'user_article_mapping.json')
-mysql_kb_article_map_path = os.path.join(mysql_data_dir, 'kb_article_mappping.json')
 
 '''用户配置'''
 config_dir = os.path.join(project_dir, 'config')
 user_password_info_dict_filename = conf_yaml['user']['user_password_info_dict_path']
 user_password_info_dict_path = os.path.join(config_dir, user_password_info_dict_filename)
 
-def get_database_config():
-    '''根据数据库进行初始化配置'''
-    if database_type == 'lancedb':
-        database_dir = os.path.join(lancedb_data_dir, 'data')
-        articles_user_path = lancedb_articles_user_path
-        kb_article_map_path = lancedb_kb_article_map_path
-    elif database_type == 'milvus':
-        database_dir = ''
-        articles_user_path = milvus_articles_user_path
-        kb_article_map_path = milvus_kb_article_map_path
-    elif database_type == 'mysql':
-        database_dir = ''
-        articles_user_path = milvus_articles_user_path
-        kb_article_map_path = milvus_kb_article_map_path
-    else:
-        assert False, f"{database_type} not support!"
-    return database_dir, articles_user_path, kb_article_map_path
-
 '''parse voice config'''
 voice_chunk_size = conf_yaml['rag']['parse_voice']['voice_chunk_size']
 
-database_dir, articles_user_path, kb_article_map_path = get_database_config()
 
-def init_article_user_and_kb_mapping_file(articles_user_path, kb_article_map_path):
-    '''创建user_article_mapping.json和kb_article_mappping.json文件'''
-    user_info_dict = read_json_file(user_password_info_dict_path)
-    if os.path.exists(articles_user_path):
-        pass
-    else:
-        articles_user_default_json = {}
-        for user_name in user_info_dict.keys():
-            articles_user_default_json[user_name] = {}
-        save_json_file(articles_user_default_json, articles_user_path)
+@singleton
+class Deal_user_article_kb_config():
+    def __init__(self, database_type):
+        '''数据库相关'''
+        self.database_root_dir = self.init_data_dir()
+        self.get_mysql_config()
+        self.get_lancedb_config()
+        self.get_milvus_config()
+        self.get_database_config(database_type)
+        self.init_article_user_and_kb_mapping_file()
 
-    if os.path.exists(kb_article_map_path):
-        pass
-    else:
-        kb_article_map_default_json = {}
-        for user_name in user_info_dict.keys():
-            kb_article_map_default_json[user_name] = {}
-        save_json_file(kb_article_map_default_json, kb_article_map_path)
+    def init_data_dir(self):
+        project_dir = os.path.dirname(os.path.dirname(__file__))
+        data_dir = os.path.join(project_dir, 'data')
+        database_root_dir = os.path.join(data_dir, 'database')
+        return database_root_dir
 
-init_article_user_and_kb_mapping_file(articles_user_path, kb_article_map_path)
+    def get_mysql_config(self):
+        '''mysql配置'''
+        self.mysql_host = conf_yaml['mysql']['host']
+        self.mysql_port = conf_yaml['mysql']['port']
+        self.mysql_user = conf_yaml['mysql']['user']
+        self.mysql_password = conf_yaml['mysql']['password']
+        self.mysql_database_name = conf_yaml['mysql']['database_name']
+        mysql_data_dir = os.path.join(self.database_root_dir, 'mysql')
+        self.mysql_article_table_info_name = conf_yaml['mysql']['article_table_name']
+        self.mysql_articles_user_path = os.path.join(mysql_data_dir, 'user_article_mapping.json')
+        self.mysql_kb_article_map_path = os.path.join(mysql_data_dir, 'kb_article_mappping.json')
+
+
+    def get_lancedb_config(self):
+        '''lancedb配置相关'''
+        self.lancedb_data_dir = os.path.join(self.database_root_dir, 'lancedb')
+        self.lancedb_articles_user_path = os.path.join(self.lancedb_data_dir, 'user_article_mapping.json')
+        self.lancedb_kb_article_map_path = os.path.join(self.lancedb_data_dir, 'kb_article_mappping.json')
+
+    def get_milvus_config(self):
+        '''milvus配置相关'''
+        milvus_data_dir = os.path.join(self.database_root_dir, 'milvus')
+        self.milvus_articles_user_path = os.path.join(milvus_data_dir, 'user_article_mapping.json')
+        self.milvus_kb_article_map_path = os.path.join(milvus_data_dir, 'kb_article_mappping.json')
+
+    def get_username(self, request: gr.Request):
+        '''获取初始状态'''
+        article_dict = read_user_info_dict(request.username, self.articles_user_path)  # id:value
+        kb_article_dict = read_user_info_dict(request.username, self.kb_article_map_path)
+        return article_dict, kb_article_dict
+
+    def database_type_dropdowns(self, input_value, request: gr.Request):
+        choices = ['lancedb', 'milvus', 'mysql', 'es']
+        self.get_database_config(database_type=input_value)
+        dropdown = gr.Dropdown(choices=choices, label='关联的数据库', value=input_value, interactive=True)
+        article_dict, kb_article_dict = self.get_username(request)
+        return dropdown, dropdown, dropdown, article_dict, kb_article_dict
+
+    def get_database_config(self, database_type='lancedb'):
+        '''根据数据库进行初始化配置'''
+        if database_type == 'lancedb':
+            database_dir = os.path.join(self.lancedb_data_dir, 'data')
+            articles_user_path = self.lancedb_articles_user_path
+            kb_article_map_path = self.lancedb_kb_article_map_path
+        elif database_type == 'milvus':
+            database_dir = ''
+            articles_user_path = self.milvus_articles_user_path
+            kb_article_map_path = self.milvus_kb_article_map_path
+        elif database_type == 'mysql':
+            database_dir = ''
+            articles_user_path = self.mysql_articles_user_path
+            kb_article_map_path = self.mysql_kb_article_map_path
+        else:
+            assert False, f"{database_type} not support!"
+        self.database_dir = database_dir
+        self.articles_user_path = articles_user_path
+        self.kb_article_map_path = kb_article_map_path
+        self.database_type = database_type
+
+    def init_article_user_and_kb_mapping_file(self):
+        '''创建user_article_mapping.json和kb_article_mappping.json文件'''
+        user_info_dict = read_json_file(user_password_info_dict_path)
+        if os.path.exists(self.articles_user_path):
+            pass
+        else:
+            os.makedirs(os.path.dirname(self.articles_user_path), exist_ok=True)
+            articles_user_default_json = {}
+            for user_name in user_info_dict.keys():
+                articles_user_default_json[user_name] = {}
+            save_json_file(articles_user_default_json, self.articles_user_path)
+
+        if os.path.exists(self.kb_article_map_path):
+            pass
+        else:
+            os.makedirs(os.path.dirname(self.kb_article_map_path), exist_ok=True)
+            kb_article_map_default_json = {}
+            for user_name in user_info_dict.keys():
+                kb_article_map_default_json[user_name] = {}
+            save_json_file(kb_article_map_default_json, self.kb_article_map_path)
+
+akb_conf_class = Deal_user_article_kb_config('lancedb')
+
+articles_user_path = akb_conf_class.articles_user_path
+kb_article_map_path = akb_conf_class.kb_article_map_path
+database_dir = akb_conf_class.database_dir
+database_type =akb_conf_class.database_type

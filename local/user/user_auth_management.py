@@ -4,7 +4,6 @@ import json
 import threading
 import gradio as gr
 from utils.tool import read_json_file, save_json_file
-from utils.config_init import lancedb_articles_user_path,lancedb_kb_article_map_path,milvus_articles_user_path, milvus_kb_article_map_path
 
 
 class AuthManager:
@@ -20,21 +19,8 @@ class AuthManager:
                 json_info_dict[user_name] = {}
         save_json_file(json_info_dict, json_file_path)
 
-    def init_user_art_kb_json_files(self, user_info):
-        '''当有新增用户时，要及时更新用户和文章匹配表，和更新用户和知识库匹配表'''
-        for file_path in [lancedb_articles_user_path,lancedb_kb_article_map_path,milvus_articles_user_path, milvus_kb_article_map_path]:
-            if not os.path.exists(file_path):
-                self.init_user_art_kb_json_files_do(file_path, user_info)
-            else:
-                json_info = read_json_file(file_path)
-                for user_name in user_info.keys():
-                    if user_name not in json_info.keys():
-                        json_info[user_name] = {}
-                save_json_file(json_info, file_path)
-
     def load_auth_from_json(self):
         user_info = read_json_file(self.json_file_path)
-        self.init_user_art_kb_json_files(user_info)
         return user_info
 
 

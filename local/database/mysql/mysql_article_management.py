@@ -3,14 +3,8 @@ import pymysql
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+from utils.tool import singleton
 
-def singleton(cls):
-    instances = {}
-    def wrapper(*args, **kwargs):
-        if cls not in instances:
-            instances[cls] = cls(*args, **kwargs)
-        return instances[cls]
-    return wrapper
 
 @singleton
 class MySQLDatabase:
@@ -231,38 +225,44 @@ class MySQLDatabase:
 
 # 以下是使用示例
 if __name__ == "__main__":
+    from utils.tool import save_rag_group_name, read_json_file
+    from utils.config_init import akb_conf_class
     from utils.config_init import rag_data_csv_dir
     database_name = 'gradio_bot'
     table_name = 'article_info'
 
     db = MySQLDatabase('localhost', 'root', 'root', port=3310)
     db.connect()
-    # db.create_database(database_name)
+    db.create_database(database_name)
     db.use_database(database_name)
 
     # db.check_table_charset(table_name)
     # db.delete_table(table_name)
+    db.create_table(table_name)
 
-    # db.create_table(table_name)
-    # article_info_dir = os.path.join(rag_data_csv_dir, 'pandas')
-    # for filename in os.listdir(article_info_dir):
-    #     article_path = os.path.join(article_info_dir, filename)
-    #     # article_path = r'C:\use\code\RapidOcr_small\data\rag\data_csv\pandas\决策的艺术.csv'
-    #     df = pd.read_csv(article_path, encoding='utf8')
-    #     for index, article_info in tqdm(df.iterrows(), total=len(df)):
-    #         # user_id,article_id,title,content,page_count,vector,file_from,hash_check
-    #         user_id = article_info['user_id']
-    #         article_id = article_info['article_id']
-    #         title = article_info['title']
-    #         content = article_info['content']
-    #         page_count = article_info['page_count']
-    #         file_from = article_info['file_from']
-    #         hash_check = article_info['hash_check']
-    #         db.insert_data(
-    #             table_name, article_id, user_id, title, content, page_count, file_from, hash_check
-    #         )
+    user_name = 'pandas'
+    akb_conf_class.get_database_config('mysql')
+    akb_conf_class.init_article_user_and_kb_mapping_file()
+    article_info_dir = os.path.join(rag_data_csv_dir, user_name)
+    for filename in os.listdir(article_info_dir):
+        article_path = os.path.join(article_info_dir, filename)
+        df = pd.read_csv(article_path, encoding='utf8')
+        data = read_json_file(akb_conf_class.articles_user_path)
+        article_name, article_suffix = os.path.splitext(os.path.basename(article_path))
+        article_id = save_rag_group_name(user_name, article_name, data, akb_conf_class.articles_user_path)
+        for index, article_info in tqdm(df.iterrows(), total=len(df)):
+            user_id = article_info['user_id']
+            # article_id = article_info['article_id']
+            title = article_info['title']
+            content = article_info['content']
+            page_count = article_info['page_count']
+            file_from = article_info['file_from']
+            hash_check = article_info['hash_check']
+            db.insert_data(
+                table_name, article_id, user_id, title, content, page_count, file_from, hash_check
+            )
 
     # db.select_data(table_name, 'ae4863bd', '决策')
-    # db.count_table_data(table_name)
+    db.count_table_data(table_name)
     # db.delete_database(database_name)
     # db.close_connection()

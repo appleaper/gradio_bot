@@ -17,7 +17,7 @@ from utils.tool import read_user_info_dict, reverse_dict
 from utils.tool import encrypt_username
 from local.database.milvus.milvus_article_management import MilvusArticleManager
 from utils.config_init import articles_user_path, kb_article_map_path, database_dir, \
-    rag_top_k, max_history_len, max_rag_len, qwen_support_list, ollama_support_list, database_type,device_str
+    rag_top_k, max_history_len, max_rag_len, qwen_support_list, ollama_support_list, database_type, device_str
 
 def add_rag_info(textbox, book_type, rag_model, database_name, top_k, user_name):
     '''

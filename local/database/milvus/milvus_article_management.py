@@ -1,3 +1,4 @@
+import os
 import gradio as gr
 import pandas as pd
 import numpy as np
@@ -185,24 +186,38 @@ class MilvusArticleManager:
         print(f"{res['delete_count']} record has been delete!")
 
 if __name__ == '__main__':
-    from utils.tool import load_data
-    data1 = load_data('./temp.pkl')
-    data2 = load_data('./temp1.pkl')
-    df_1 = data1['df']
-    df_2 = data2['df']
-    user_id = data1['user_id']
-    # id = data['id']
+    from tqdm import tqdm
+    from utils.tool import load_data, encrypt_username, read_json_file, save_json_file
+    from utils.config_init import akb_conf_class
     manager = MilvusArticleManager()
-    # manager.create_collection(user_id)
-    # manager.insert_data_to_milvus(df, user_id)
-    manager.get_collection_counts(user_id)
+    user_name = 'pandas'
+    user_id = encrypt_username(user_name)
+    manager.create_collection(user_id)
     # manager.drop_collection(user_id)
+    manager.get_collection_counts(user_id)
+    pandas_info_path = r'C:\use\code\RapidOcr_small\data\rag\data_csv\pandas'
+    article_dict = {}
+    for file_name in tqdm(os.listdir(pandas_info_path)):
+        file_base, _ = os.path.splitext(file_name)
+        csv_path = os.path.join(pandas_info_path, file_name)
+        df = pd.read_csv(csv_path)
+        article_id = df.iloc[10]['article_id']
+        if article_id not in article_dict:
+            article_dict[article_id] = file_base
+    akb_conf_class.get_database_config('milvus')
+    user_info = read_json_file(akb_conf_class.articles_user_path)
+    user_info[user_name] = article_dict
+    save_json_file(user_info, akb_conf_class.articles_user_path)
+    print(user_info)
+        # manager.insert_data_to_milvus(df, user_id)
+    # manager.get_collection_counts(user_id)
 
-    # article_ids_1 = df_1.iloc[1].article_id
-    # article_ids_2 = df_2.iloc[1].article_id
-    # vector = df_1.iloc[1].vector
-    # result_list = manager.search_vectors_with_articles(user_id, vector, [article_ids_1, article_ids_2])
-    # print(len(result_list))
+
+    #         print(article_id)
+    #         print(user_id)
+    #         result_list = manager.search_vectors_with_articles(user_id, vector, [article_id])
+    #         print(result_list[0])
+    #         break
 
     # manager.delete_data_by_article_id(user_id, [article_ids_1])
     # result_list = manager.search_vectors(user_id, article_ids, vector)

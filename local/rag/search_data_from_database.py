@@ -8,8 +8,15 @@ from local.embedding_model.embedding_init import load_rag_model
 from utils.tool import encrypt_username,read_user_info_dict, reverse_dict
 from local.database.milvus.milvus_article_management import MilvusArticleManager
 
-from local.chat_model.chat_do import add_rag_info, database_dir, kb_article_map_path, articles_user_path
-from utils.config_init import mysql_user,mysql_host,mysql_port,mysql_password, mysql_database_name, mysql_article_table_info_name
+from local.chat_model.chat_do import add_rag_info, database_dir
+from utils.config_init import akb_conf_class
+
+mysql_user = akb_conf_class.mysql_user
+mysql_host = akb_conf_class.mysql_host
+mysql_port = akb_conf_class.mysql_port
+mysql_password = akb_conf_class.mysql_password
+mysql_database_name = akb_conf_class.mysql_database_name
+mysql_article_table_info_name = akb_conf_class.mysql_article_table_info_name
 
 
 def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, user_name, database_type):
@@ -24,10 +31,10 @@ def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, us
     '''
     top_k = int(top_k)
     # model, tokenizer = load_model_cached('qwen2.5-0.5B-Instruct')
-    all_knowledge_bases_record = read_user_info_dict(user_name, kb_article_map_path)
-    inverted_dict = reverse_dict(read_user_info_dict(user_name, articles_user_path))
+    all_knowledge_bases_record = read_user_info_dict(user_name, akb_conf_class.kb_article_map_path)
+    inverted_dict = reverse_dict(read_user_info_dict(user_name, akb_conf_class.articles_user_path))
     vector = rag_model.encode(textbox, batch_size=1, max_length=8192)['dense_vecs']
-
+    akb_conf_class.get_database_config(database_type)
     if database_type=='lancedb':
         db = lancedb.connect(database_name)
         records_df = pd.DataFrame()
@@ -39,7 +46,10 @@ def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, us
     elif database_type == 'milvus':
         user_id = encrypt_username(user_name)
         manager = MilvusArticleManager()
-        articles_id_list = list(inverted_dict.values())
+        article_range = all_knowledge_bases_record[book_type]
+        articles_id_list = []
+        for article_name in article_range:
+            articles_id_list.append(inverted_dict[article_name])
         vector = np.array(vector, dtype=np.float32)
         res = manager.search_vectors_with_articles(user_id, vector, articles_id_list, limit=top_k)
         sorted_records_df = pd.DataFrame(res)
@@ -56,8 +66,9 @@ def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, us
 
 def get_info_from_mysql(search_content, search_range, top_k, user_name):
     top_k = int(top_k)
-    all_knowledge_bases_record = read_user_info_dict(user_name, kb_article_map_path)
-    inverted_dict = reverse_dict(read_user_info_dict(user_name, articles_user_path))
+
+    all_knowledge_bases_record = read_user_info_dict(user_name, akb_conf_class.kb_article_map_path)
+    inverted_dict = reverse_dict(read_user_info_dict(user_name, akb_conf_class.articles_user_path))
     mysql_database = MySQLDatabase(host=mysql_host, user=mysql_user, password=mysql_password, port=mysql_port)
     article_name_list = all_knowledge_bases_record[search_range]
     article_id_list = []
@@ -66,25 +77,34 @@ def get_info_from_mysql(search_content, search_range, top_k, user_name):
         article_id_list.append(inverted_dict[article_name])
     mysql_database.connect()
     mysql_database.use_database(mysql_database_name)
-    mysql_database.select_data(mysql_article_table_info_name, user_id, search_content, article_id_list, top_k)
-    print(1)
+    result = mysql_database.select_data(mysql_article_table_info_name, user_id, search_content, article_id_list, top_k)
+    result_list = []
+    for row in result:
+        info = {}
+        info['title'] = row[2]
+        info['content'] = row[3]
+        info['file_from'] = row[5]
+        result_list.append(info)
+    return pd.DataFrame(result_list)
+
 
 
 def search_data_from_database_do(database_type, search_content, search_range, search_tok_k, request: gr.Request):
     user_name = request.username
-    if database_type=='lancedb数据库':
+    if database_type=='lancedb':
         rag_model, rag_tokenizer = load_rag_model('bge_m3')
         rag_df = get_info_from_vector(search_content, search_range, rag_model, database_dir, search_tok_k, user_name, 'lancedb')
-        return rag_df
-    elif database_type == 'milvus数据库':
+    elif database_type == 'milvus':
         rag_model, rag_tokenizer = load_rag_model('bge_m3')
         rag_df = get_info_from_vector(search_content, search_range, rag_model, database_dir, search_tok_k, user_name,
                                       'milvus')
-        return rag_df
-    elif database_type =='mysql数据库':
-        get_info_from_mysql(search_content, search_range, search_tok_k, user_name)
+    elif database_type =='mysql':
+        rag_df = get_info_from_mysql(search_content, search_range, search_tok_k, user_name)
+    elif database_type == 'es':
+        rag_df = pd.DataFrame([])
     else:
         raise gr.Error('暂时不支持')
+    return rag_df
 
 
 def get_user_select_info(evt: gr.SelectData):

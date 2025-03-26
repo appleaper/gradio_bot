@@ -4,7 +4,7 @@ import lancedb
 import gradio as gr
 import pandas as pd
 from utils.tool import read_json_file, save_json_file, reverse_dict
-from utils.config_init import kb_article_map_path, rag_data_csv_dir, articles_user_path, database_dir
+from utils.config_init import akb_conf_class, rag_data_csv_dir
 
 def create_or_add_data_to_lancedb(rag_database_name, table_name, df):
     '''创建数据表，并插入数据，若数据存在就跳过'''
@@ -39,11 +39,11 @@ def drop_lancedb_table(need_detele_articles, all_articles_dict, user_name):
     '''
     删除文章
     '''
-    db = lancedb.connect(database_dir)
+    db = lancedb.connect(akb_conf_class.database_dir)
     reverse_all_articles_dict = reverse_dict(all_articles_dict)
     for table_name in need_detele_articles:
         if table_name in reverse_all_articles_dict.keys():
-            table_path = os.path.join(database_dir, reverse_all_articles_dict[table_name] + '.lance')
+            table_path = os.path.join(akb_conf_class.database_dir, reverse_all_articles_dict[table_name] + '.lance')
             if os.path.exists(table_path):
                 db.drop_table(reverse_all_articles_dict[table_name])
                 del reverse_all_articles_dict[table_name]
@@ -55,7 +55,7 @@ def drop_lancedb_table(need_detele_articles, all_articles_dict, user_name):
             if os.path.exists(csv_drop_path):
                 os.remove(csv_drop_path)
 
-    knowledge_json = read_json_file(kb_article_map_path)
+    knowledge_json = read_json_file(akb_conf_class.kb_article_map_path)
     for knowledge_name in list(knowledge_json[user_name].keys()):
         articles_list = knowledge_json[user_name][knowledge_name]
         for need_detele_article in need_detele_articles:
@@ -65,11 +65,11 @@ def drop_lancedb_table(need_detele_articles, all_articles_dict, user_name):
             # 如果列表为空，删除该键值对
             del knowledge_json[user_name][knowledge_name]
 
-    save_json_file(knowledge_json, kb_article_map_path)
+    save_json_file(knowledge_json, akb_conf_class.kb_article_map_path)
 
-    articles_user_mapping_dict = read_json_file(articles_user_path)
+    articles_user_mapping_dict = read_json_file(akb_conf_class.articles_user_path)
     articles_user_mapping_dict[user_name] = reverse_dict(reverse_all_articles_dict)
-    save_json_file(articles_user_mapping_dict, articles_user_path)
+    save_json_file(articles_user_mapping_dict, akb_conf_class.articles_user_path)
     return reverse_dict(reverse_all_articles_dict), knowledge_json
 
 if __name__ == '__main__':
