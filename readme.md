@@ -6,6 +6,8 @@
 4. 多个知识可以组成知识库
 5. 目前可以解析PDF、规定格式的CSV、JPG、png、JPEG、docx、MP4、mp3格式的文件。
 6. 提供ocr识别
+7. 提供语言转文字
+8. rag库支持lancedb,milvus,mysql,es数据库存储
 
 # 重点功能流程解释
 

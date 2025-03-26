@@ -73,6 +73,7 @@ class Deal_user_article_kb_config():
         self.get_mysql_config()
         self.get_lancedb_config()
         self.get_milvus_config()
+        self.get_es_config()
         self.get_database_config(database_type)
         self.init_article_user_and_kb_mapping_file()
 
@@ -107,6 +108,11 @@ class Deal_user_article_kb_config():
         self.milvus_articles_user_path = os.path.join(milvus_data_dir, 'user_article_mapping.json')
         self.milvus_kb_article_map_path = os.path.join(milvus_data_dir, 'kb_article_mappping.json')
 
+    def get_es_config(self):
+        es_data_dir = os.path.join(self.database_root_dir, 'es')
+        self.es_articles_user_path = os.path.join(es_data_dir, 'user_article_mapping.json')
+        self.es_kb_article_map_path = os.path.join(es_data_dir, 'kb_article_mappping.json')
+
     def get_username(self, request: gr.Request):
         '''获取初始状态'''
         article_dict = read_user_info_dict(request.username, self.articles_user_path)  # id:value
@@ -134,6 +140,10 @@ class Deal_user_article_kb_config():
             database_dir = ''
             articles_user_path = self.mysql_articles_user_path
             kb_article_map_path = self.mysql_kb_article_map_path
+        elif database_type == 'es':
+            database_dir = ''
+            articles_user_path = self.es_articles_user_path
+            kb_article_map_path = self.es_kb_article_map_path
         else:
             assert False, f"{database_type} not support!"
         self.database_dir = database_dir

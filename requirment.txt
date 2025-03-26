@@ -30,3 +30,6 @@ ollama>=0.4.7
 # mysql组件
 pymysq>=-1.1.1
 cryptography>=44.0.2
+
+# es组件
+elasticsearch>=8.17.2
