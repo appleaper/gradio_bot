@@ -7,17 +7,16 @@ import lancedb
 import gradio as gr
 import numpy as np
 from ollama import chat
-from local.qwen.qwen_api import qwen_model_detect
-from local.llama3.llama3_api import llama3_model_detect
-from local.MiniCPM.minicpm_api import minicpm_model_detect
-from local.local_api import load_model_cached, load_rag_cached
+
 from threading import Thread
 from transformers import TextIteratorStreamer
 from utils.tool import read_user_info_dict, reverse_dict
+from local.local_api import load_model_cached, load_rag_cached
 from utils.tool import encrypt_username
 from local.database.milvus.milvus_article_management import MilvusArticleManager
 from utils.config_init import articles_user_path, kb_article_map_path, database_dir, \
     rag_top_k, max_history_len, max_rag_len, qwen_support_list, ollama_support_list, database_type, device_str
+from local.rag.parse.web_parse import
 
 def add_rag_info(textbox, book_type, rag_model, database_name, top_k, user_name):
     '''
@@ -84,7 +83,7 @@ def add_rag_info(textbox, book_type, rag_model, database_name, top_k, user_name)
     return rag_str
 
 
-def local_chat(textbox, show_history, system_state, history, model_type, parm_b, book_type, request: gr.Request):
+def local_chat(textbox, show_history, system_state, history, model_type, parm_b, book_type, is_connected_network,request: gr.Request):
     '''
 
     :param textbox: 用户提问
@@ -95,6 +94,7 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
     :param parm_b: 模型名字
     :param steam_check_box: 流式输出与否，str类型
     :param book_type: 知识库的名字
+    :param is_connected_network: 是否联网搜索
     :param request: 当前登录用户的名字
     :return:
     '''

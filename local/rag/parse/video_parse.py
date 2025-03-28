@@ -119,9 +119,10 @@ def extract_and_process_audio(input_video_path, output_audio_dir, model):
     return all_results
 
 
-def parse_video_do(file_name, id, user_id):
+def parse_video_do(file_name, id, user_id, database_type):
     '''对音频进行解析'''
-    model_bge = load_bge_model_cached(bge_m3_model_path)
+    if database_type in ['lancedb', 'milvus']:
+        model_bge = load_bge_model_cached(bge_m3_model_path)
     model_voice = FireRedAsr.from_pretrained("aed", voice_model_path)
     info_list = []
     voice_result_list = extract_and_process_audio(file_name, tmp_dir_path, model_voice)
@@ -136,7 +137,10 @@ def parse_video_do(file_name, id, user_id):
         info['title'] = ''
         info['content'] = chunk
         info['page_count'] = ''
-        info['vector'] = model_bge.encode(chunk, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        if database_type in ['lancedb', 'milvus']:
+            info['vector'] = model_bge.encode(chunk, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        else:
+            info['vector'] = []
         info['file_from'] = os.path.basename(file_name)
         info['hash_check'] = hashlib.sha256((user_id+id+chunk).encode('utf-8')).hexdigest()
         info_list.append(info)

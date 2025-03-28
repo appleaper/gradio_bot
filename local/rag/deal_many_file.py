@@ -9,10 +9,14 @@ from local.rag.parse.docx_parser import parse_docx_do
 from local.rag.parse.image_parse import parse_image_do
 from local.rag.parse.voice_parse import parse_voice_do
 from local.rag.parse.video_parse import parse_video_do
-from utils.tool import encrypt_username, save_rag_group_name, reverse_dict, read_user_info_dict, save_json_file, read_json_file
+from utils.tool import encrypt_username, save_rag_group_name, read_user_info_dict, save_json_file, read_json_file
 from local.database.lancedb.data_to_lancedb import create_or_add_data_to_lancedb, drop_lancedb_table
 from local.database.milvus.milvus_article_management import MilvusArticleManager
 from local.database.milvus.delete_data_from_milvus import drop_milvus_table
+from local.database.mysql.mysql_article_management import init_mysql
+from local.database.mysql.delete_data__from_mysql import drop_mysql_table
+from local.database.es.es_article_management import ElasticsearchManager
+from local.database.es.delete_data__from_es import drop_es_table
 from utils.config_init import rag_data_csv_dir, akb_conf_class
 
 
@@ -33,11 +37,12 @@ def save_rag_group_csv_name(df2, rag_data_csv_dir, id, rag_list_config_path, use
 
 
 
-def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, request: gr.Request, progress=gr.Progress()):
+def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, rag_database_type,request: gr.Request, progress=gr.Progress()):
     '''将各种格式的东西转为embbing并存入数据库中'''
     user_name = request.username
     user_id = encrypt_username(user_name)
-
+    akb_conf_class.get_database_config(rag_database_type)
+    database_type = akb_conf_class.database_type
     if knowledge_name == '':
         knowledge_name = os.path.basename(rag_upload_files[0])
         article_name, file_suffix = os.path.splitext(knowledge_name)
@@ -45,24 +50,23 @@ def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, r
         article_name = knowledge_name
     articles_user_mapping_dict = read_json_file(akb_conf_class.articles_user_path)
     id = save_rag_group_name(user_name, article_name, articles_user_mapping_dict, akb_conf_class.articles_user_path)
-    if akb_conf_class.database_type=='milvus':
-        manager = MilvusArticleManager()
+
     for file_index, file_name in tqdm(enumerate(rag_upload_files), total=len(rag_upload_files)):
         upload_file, suffix = os.path.splitext(os.path.basename(file_name))
         if suffix == '.pdf':
-            df = parse_pdf_do(file_name, id, user_id)
+            df = parse_pdf_do(file_name, id, user_id, database_type)
         elif suffix in ['.csv', '.xlsx']:
-            df = parse_csv_do(file_name, id, user_id)
+            df = parse_csv_do(file_name, id, user_id, database_type)
         elif suffix == '.md':
-            df = parse_markdown_do(file_name, id, user_id)
+            df = parse_markdown_do(file_name, id, user_id, database_type)
         elif suffix == '.docx':
-            df = parse_docx_do(file_name, id, user_id)
+            df = parse_docx_do(file_name, id, user_id, database_type)
         elif suffix in ['.jpg', '.jpeg', '.png']:
-            df = parse_image_do(file_name, id, user_id)
+            df = parse_image_do(file_name, id, user_id, database_type)
         elif suffix == '.mp3':
-            df = parse_voice_do(file_name, id, user_id)
+            df = parse_voice_do(file_name, id, user_id, database_type)
         elif suffix == '.mp4':
-            df = parse_video_do(file_name, id, user_id)
+            df = parse_video_do(file_name, id, user_id, database_type)
         else:
             gr.Warning(f'{os.path.basename(file_name)}不支持解析')
             continue
@@ -73,22 +77,38 @@ def deal_mang_knowledge_files(rag_upload_files, is_same_group, knowledge_name, r
 
         if akb_conf_class.database_type == 'lancedb':
             save_df = create_or_add_data_to_lancedb(akb_conf_class.database_dir, id, df)
-        else:
+        elif akb_conf_class.database_type=='milvus':
+            manager = MilvusArticleManager()
             manager.create_collection(user_id)
             save_df = manager.insert_data_to_milvus(df, user_id)
+        elif akb_conf_class.database_type == 'mysql':
+            manager = init_mysql()
+            save_df = manager.insert_data_format_df(akb_conf_class.mysql_article_table_info_name, df)
+        elif akb_conf_class.database_type == 'es':
+            manager = ElasticsearchManager(index_name=akb_conf_class.es_index_name)
+            save_df = manager.insert_data_format_df(df)
+        else:
+            raise gr.Error(f'{akb_conf_class.database_type} not support!')
+
         save_df['database_type'] = akb_conf_class.database_type
         save_rag_group_csv_name(save_df, rag_data_csv_dir, id, akb_conf_class.articles_user_path, user_name)
         progress(round((file_index + 1) / len(rag_upload_files), 2))
     return articles_user_mapping_dict[user_name], None, None, []
 
 
-def delete_article_from_database(need_detele_articles, all_articles_dict, request: gr.Request):
-    akb_conf_class.get_database_config()
+def delete_article_from_database(need_detele_articles, all_articles_dict, choice_database_type,request: gr.Request):
+    akb_conf_class.get_database_config(database_type=choice_database_type)
     user_name = request.username
     if akb_conf_class.database_type == 'lancedb':
         all_articles_dict, articles_user_mapping_dict = drop_lancedb_table(need_detele_articles, all_articles_dict, user_name)
-    else:
+    elif akb_conf_class.database_type == 'milvus':
         all_articles_dict, articles_user_mapping_dict = drop_milvus_table(need_detele_articles, all_articles_dict, user_name)
+    elif akb_conf_class.database_type == 'mysql':
+        all_articles_dict, articles_user_mapping_dict = drop_mysql_table(need_detele_articles, all_articles_dict, user_name)
+    elif akb_conf_class.database_type == 'es':
+        all_articles_dict, articles_user_mapping_dict = drop_es_table(need_detele_articles, all_articles_dict, user_name)
+    else:
+        raise gr.Error(f'{akb_conf_class.database_type} not support!')
     return all_articles_dict, articles_user_mapping_dict[user_name]
 
 

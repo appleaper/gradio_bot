@@ -3,20 +3,12 @@ import numpy as np
 import gradio as gr
 import pandas as pd
 from local.database.mysql.mysql_article_management import MySQLDatabase
-from utils.config_init import database_type
 from local.embedding_model.embedding_init import load_rag_model
 from utils.tool import encrypt_username,read_user_info_dict, reverse_dict
 from local.database.milvus.milvus_article_management import MilvusArticleManager
-
-from local.chat_model.chat_do import add_rag_info, database_dir
+from local.database.es.es_article_management import ElasticsearchManager
 from utils.config_init import akb_conf_class
 
-mysql_user = akb_conf_class.mysql_user
-mysql_host = akb_conf_class.mysql_host
-mysql_port = akb_conf_class.mysql_port
-mysql_password = akb_conf_class.mysql_password
-mysql_database_name = akb_conf_class.mysql_database_name
-mysql_article_table_info_name = akb_conf_class.mysql_article_table_info_name
 
 
 def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, user_name, database_type):
@@ -65,19 +57,24 @@ def get_info_from_vector(textbox, book_type, rag_model, database_name, top_k, us
     return pd.DataFrame(result_list)
 
 def get_info_from_mysql(search_content, search_range, top_k, user_name):
+    '''根据条件从mysql中获取信息'''
     top_k = int(top_k)
-
     all_knowledge_bases_record = read_user_info_dict(user_name, akb_conf_class.kb_article_map_path)
     inverted_dict = reverse_dict(read_user_info_dict(user_name, akb_conf_class.articles_user_path))
-    mysql_database = MySQLDatabase(host=mysql_host, user=mysql_user, password=mysql_password, port=mysql_port)
+    mysql_database = MySQLDatabase(
+        host=akb_conf_class.mysql_host,
+        user=akb_conf_class.mysql_user,
+        password=akb_conf_class.mysql_password,
+        port=akb_conf_class.mysql_port
+    )
     article_name_list = all_knowledge_bases_record[search_range]
     article_id_list = []
     user_id = encrypt_username(user_name)
     for article_name in article_name_list:
         article_id_list.append(inverted_dict[article_name])
     mysql_database.connect()
-    mysql_database.use_database(mysql_database_name)
-    result = mysql_database.select_data(mysql_article_table_info_name, user_id, search_content, article_id_list, top_k)
+    mysql_database.use_database(akb_conf_class.mysql_database_name)
+    result = mysql_database.select_data(akb_conf_class.mysql_article_table_info_name, user_id, search_content, article_id_list, top_k)
     result_list = []
     for row in result:
         info = {}
@@ -87,21 +84,38 @@ def get_info_from_mysql(search_content, search_range, top_k, user_name):
         result_list.append(info)
     return pd.DataFrame(result_list)
 
+def get_info_from_es(search_content, search_range, top_k, user_name):
+    '''根据条件从es中获取信息'''
+    top_k = int(top_k)
+    all_knowledge_bases_record = read_user_info_dict(user_name, akb_conf_class.kb_article_map_path)
+    inverted_dict = reverse_dict(read_user_info_dict(user_name, akb_conf_class.articles_user_path))
+    article_name_list = all_knowledge_bases_record[search_range]
+    article_id_list = []
+    user_id = encrypt_username(user_name)
+    for article_name in article_name_list:
+        article_id_list.append(inverted_dict[article_name])
 
+    es_class = ElasticsearchManager(akb_conf_class.es_index_name)
+    result = es_class.query_data(user_id, article_id_list, search_content, top_k)
+    df = pd.DataFrame(result)
+    df = df[['title', 'content', 'file_from']]
+    return df
 
 def search_data_from_database_do(database_type, search_content, search_range, search_tok_k, request: gr.Request):
     user_name = request.username
     if database_type=='lancedb':
         rag_model, rag_tokenizer = load_rag_model('bge_m3')
-        rag_df = get_info_from_vector(search_content, search_range, rag_model, database_dir, search_tok_k, user_name, 'lancedb')
+        akb_conf_class.get_database_config('lancedb')
+        rag_df = get_info_from_vector(search_content, search_range, rag_model, akb_conf_class.database_dir, search_tok_k, user_name, 'lancedb')
     elif database_type == 'milvus':
         rag_model, rag_tokenizer = load_rag_model('bge_m3')
-        rag_df = get_info_from_vector(search_content, search_range, rag_model, database_dir, search_tok_k, user_name,
+        akb_conf_class.get_database_config('milvus')
+        rag_df = get_info_from_vector(search_content, search_range, rag_model, akb_conf_class.database_dir, search_tok_k, user_name,
                                       'milvus')
     elif database_type =='mysql':
         rag_df = get_info_from_mysql(search_content, search_range, search_tok_k, user_name)
     elif database_type == 'es':
-        rag_df = pd.DataFrame([])
+        rag_df = get_info_from_es(search_content, search_range, search_tok_k, user_name)
     else:
         raise gr.Error('暂时不支持')
     return rag_df

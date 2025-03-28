@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from utils.tool import singleton
+from utils.config_init import akb_conf_class
 
 
 @singleton
@@ -137,34 +138,11 @@ class MySQLDatabase:
                 # print(f"执行的插入语句: {debug_query}")
                 cursor.execute(insert_query, tuple(values))
             self.connection.commit()
+            return 1
         except pymysql.Error as e:
             print(f"插入数据时出错: {e}")
             print(f"执行的 SQL 语句: {insert_query % tuple(values)}")
-
-    def delete_data(self, table_name, condition):
-        '''删除数据'''
-        if self.connection is None:
-            print("请先连接到数据库")
-            return
-        try:
-            with self.connection.cursor() as cursor:
-                delete_query = f"DELETE FROM {table_name} WHERE {condition}"
-                cursor.execute(delete_query)
-            self.connection.commit()
-            print("数据删除成功")
-        except pymysql.Error as e:
-            print(f"删除数据时出错: {e}")
-
-    def select_by_userid_group_articleid(self, input_text, search_range, tok_k, user_name):
-        '''
-        根据用户id，文章范围，搜索的关键词，返回tok_k条相关记录
-        :param input_text: 搜索的关键词
-        :param search_range: 搜索范围
-        :param tok_k: 返回条数
-        :param user_name: 用户名
-        :return:
-        '''
-        pass
+            return 0
 
     def select_data(self, table_name, user_id, input_text, article_id_list, limit=3):
         '''查询数据'''
@@ -183,20 +161,6 @@ class MySQLDatabase:
                 return results
         except pymysql.Error as e:
             print(f"查询数据时出错: {e}")
-
-    def delete_table(self, table_name):
-        '''删除数据表'''
-        if self.connection is None:
-            print("请先连接到数据库")
-            return
-        try:
-            with self.connection.cursor() as cursor:
-                delete_table_query = f"DROP TABLE IF EXISTS {table_name}"
-                cursor.execute(delete_table_query)
-            self.connection.commit()
-            print(f"数据表 {table_name} 删除成功")
-        except pymysql.Error as e:
-            print(f"删除数据表时出错: {e}")
 
     def count_table_data(self, table_name):
         """查询指定表中的数据数量"""
@@ -222,11 +186,65 @@ class MySQLDatabase:
             self.connection.close()
             print("数据库连接已关闭")
 
+    def insert_data_format_df(self, table_name, df):
+        '''插入格式是'''
+        insert_list = []
+        for index, article_info in tqdm(df.iterrows(), total=len(df)):
+            user_id = article_info['user_id']
+            article_id = article_info['article_id']
+            title = self._replace_nan(article_info['title'])
+            content = self._replace_nan(article_info['content'])
+            page_count = self._replace_nan(article_info['page_count'])
+            file_from = self._replace_nan(article_info['file_from'])
+            hash_check = article_info['hash_check']
+            check_flag = self.insert_data(
+                table_name, article_id, user_id, title, content, page_count, file_from, hash_check
+            )
+            if check_flag:
+                insert_list.append(article_info)
+        return pd.DataFrame(insert_list)
+
+    def delete_data_by_user_and_article_ids(self, table_name, user_id, article_id_list):
+        """
+        根据用户 ID 和文章列表 ID 删除数据
+        :param table_name: 表名
+        :param user_id: 用户 ID
+        :param article_id_list: 文章 ID 列表
+        """
+        if self.connection is None:
+            print("请先连接到数据库")
+            return
+        try:
+            placeholders = ', '.join(['%s'] * len(article_id_list))
+            delete_query = f"DELETE FROM {table_name} WHERE user_id = %s AND article_id IN ({placeholders})"
+            params = (user_id, *article_id_list)
+            with self.connection.cursor() as cursor:
+                cursor.execute(delete_query, params)
+            self.connection.commit()
+            print("数据删除成功")
+            return True
+        except pymysql.Error as e:
+            print(f"删除数据时出错: {e}")
+            return False
+
+
+def init_mysql():
+    '''插入数据的时候，初始化mysql'''
+    manager = MySQLDatabase(
+        host=akb_conf_class.mysql_host,
+        user=akb_conf_class.mysql_user,
+        password=akb_conf_class.mysql_password,
+        port=akb_conf_class.mysql_port
+    )
+    manager.connect()
+    manager.create_database(akb_conf_class.mysql_database_name)
+    manager.use_database(akb_conf_class.mysql_database_name)
+    return manager
 
 # 以下是使用示例
 if __name__ == "__main__":
     from utils.tool import save_rag_group_name, read_json_file
-    from utils.config_init import akb_conf_class
+    # from utils.config_init import akb_conf_class
     from utils.config_init import rag_data_csv_dir
     database_name = 'gradio_bot'
     table_name = 'article_info'

@@ -112,6 +112,7 @@ class Deal_user_article_kb_config():
         es_data_dir = os.path.join(self.database_root_dir, 'es')
         self.es_articles_user_path = os.path.join(es_data_dir, 'user_article_mapping.json')
         self.es_kb_article_map_path = os.path.join(es_data_dir, 'kb_article_mappping.json')
+        self.es_index_name = 'article_index'
 
     def get_username(self, request: gr.Request):
         '''获取初始状态'''

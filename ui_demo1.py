@@ -37,6 +37,7 @@ with gr.Blocks() as demo:
                     model_name = gr.Dropdown([], label="模型具体型号")
                     chat_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库')
 
+
                 @model_type.change(inputs=model_type, outputs=model_name)
                 def update_cities(model_type):
                     model_list = list(chat_model_dict[model_type])
@@ -44,8 +45,8 @@ with gr.Blocks() as demo:
 
 
                 with gr.Row():
-                    with gr.Column(scale=3):
-                        system_input = gr.Textbox(value=default_system, lines=1, label='角色设置')
+                    is_connected_network = gr.Checkbox(label='联网搜索', value=False, scale=1, info='选择是否联网，默认不联网')
+                    system_input = gr.Textbox(value=default_system, lines=1, label='角色设置', scale=6)
 
                 chatbot = gr.Chatbot(label='qwen2', show_copy_button=True)
                 with gr.Row():
@@ -60,7 +61,7 @@ with gr.Blocks() as demo:
 
                 textbox.submit(local_chat,
                                inputs=[textbox, chatbot, system_input, history_state, model_type, model_name,
-                                       book_type, chat_database_type],
+                                       book_type, chat_database_type, is_connected_network],
                                outputs=[textbox, chatbot, history_state])
 
                 sumbit.click(local_chat,
@@ -81,7 +82,7 @@ with gr.Blocks() as demo:
 
             with gr.TabItem('rag'):
                 with gr.Row():
-                    rag_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库')
+                    rag_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库', value='lancedb', interactive=True)
                 with gr.Row():
                     rag_checkboxgroup = gr.CheckboxGroup(choices=[], label="rag列表")
                 with gr.Row():
@@ -97,13 +98,13 @@ with gr.Blocks() as demo:
                 rag_submit_files_button = gr.Button(value='开始解析')
                 rag_submit_files_button.click(
                     deal_mang_knowledge_files,
-                    inputs=[rag_upload_file, is_same_group, knowledge_name],
-                    outputs=[article_dict_state, is_same_group, knowledge_name, rag_upload_file]
+                    inputs=[rag_upload_file, is_same_group, knowledge_name, rag_database_type],
+                    outputs=[article_dict_state, is_same_group, knowledge_name, rag_checkboxgroup]
                 )
 
             with gr.TabItem('知识库'):
                 with gr.Row():
-                    kb_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库')
+                    kb_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库', value='lancedb', interactive=True)
                 # 可选文章复选框组
                 selectable_documents_checkbox_group = gr.CheckboxGroup(
                     choices=[], label='可选文章'
@@ -126,36 +127,16 @@ with gr.Blocks() as demo:
                     outputs=[selectable_documents_checkbox_group, new_knowledge_base_name_textbox,
                              knowledge_base_info_json_table, kb_article_dict_state]
                 )
-                # 删除知识库按钮点击事件
-                delete_knowledge_base_button.click(
-                    delete_group_database,
-                    inputs=[selectable_knowledge_bases_checkbox_group, kb_database_type],
-                    outputs=[selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table,
-                             kb_article_dict_state]
-                )
-                rag_delete_button.click(
-                    delete_article_from_database,
-                    inputs=[rag_checkboxgroup, article_dict_state, kb_article_dict_state],
-                    outputs=[article_dict_state, knowledge_base_info_json_table]
-                )
-
-                @knowledge_base_info_json_table.change(inputs=knowledge_base_info_json_table,
-                                                       outputs=[selectable_knowledge_bases_checkbox_group, book_type])
-                def update_selectable_knowledge_bases(knowledge_base_info):
-                    return gr.CheckboxGroup(choices=list(knowledge_base_info.keys()), label='可选知识库'),gr.Dropdown(choices=list(knowledge_base_info.keys()), label="上下文知识")
 
                 @article_dict_state.change(inputs=article_dict_state,
                                                        outputs=[rag_checkboxgroup, selectable_documents_checkbox_group])
                 def update_selectable_knowledge_bases(input_value):
                     return gr.CheckboxGroup(choices=list(input_value.values()), label="rag管理"), gr.CheckboxGroup(choices=list(input_value.values()), label='可选文章')
 
-
-
-
             with gr.TabItem('搜索'):
                 with gr.Row():
-                    search_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库')
-                    search_database = gr.Dropdown(choices=[], label='检索范围')
+                    search_database_type = gr.Dropdown(choices=['lancedb', 'milvus', 'mysql', 'es'], label='关联的数据库', value='lancedb', interactive=True)
+                    search_kb_range = gr.Dropdown(choices=[], label='检索范围')
                     search_tok_k = gr.Textbox(value='3', label='返回多少条结果')
                 with gr.Row():
                     search_text = gr.Textbox(placeholder='输入你想搜索的内容',scale=4)
@@ -171,12 +152,12 @@ with gr.Blocks() as demo:
 
                 search_button.click(
                     search_data_from_database_do,
-                    inputs=[search_database_type, search_text, search_database, search_tok_k],
+                    inputs=[search_database_type, search_text, search_kb_range, search_tok_k],
                     outputs = [search_show]
                 )
                 search_text.submit(
                     search_data_from_database_do,
-                    inputs=[search_database_type, search_text, search_database, search_tok_k],
+                    inputs=[search_database_type, search_text, search_kb_range, search_tok_k],
                     outputs=[search_show]
                 )
                 search_show.select(
@@ -209,6 +190,31 @@ with gr.Blocks() as demo:
             def chat_database_type_change_4(input, request:gr.Request):
                 return akb_conf_class.database_type_dropdowns(input, request)
 
+            # rag删除文章
+            rag_delete_button.click(
+                delete_article_from_database,
+                inputs=[rag_checkboxgroup, article_dict_state, rag_database_type],
+                outputs=[article_dict_state, knowledge_base_info_json_table]
+            )
+
+            # 删除知识库按钮点击事件
+            delete_knowledge_base_button.click(
+                delete_group_database,
+                inputs=[selectable_knowledge_bases_checkbox_group, kb_database_type],
+                outputs=[selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table,
+                         kb_article_dict_state]
+            )
+
+            # 知识库更新时触发
+            @knowledge_base_info_json_table.change(inputs=knowledge_base_info_json_table,
+                                                   outputs=[selectable_knowledge_bases_checkbox_group, book_type, search_kb_range])
+            def update_selectable_knowledge_bases(knowledge_base_info):
+                knowledge_name_list = list(knowledge_base_info.keys())
+                a = gr.CheckboxGroup(choices=knowledge_name_list, label='可选知识库')
+                b = gr.Dropdown(choices=knowledge_name_list, label="上下文知识")
+                c = gr.Dropdown(choices=knowledge_name_list, label='检索范围')
+                return a, b, c
+
         with gr.TabItem("本地视频播放"):
             adult_ui_show()
 
@@ -224,7 +230,7 @@ with gr.Blocks() as demo:
                 selectable_knowledge_bases_checkbox_group,
                 book_type,
                 knowledge_base_info_json_table,
-                search_database
+                search_kb_range
             ])
         def update_selectable_knowledge_bases_checkbox_group_and_book_type(input_value):
             a = gr.CheckboxGroup(choices=list(input_value.keys()), label='已有知识库')

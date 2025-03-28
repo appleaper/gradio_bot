@@ -7,7 +7,7 @@ from local.rag.rag_model import load_bge_model_cached
 from utils.config_init import bge_m3_model_path
 
 
-def parse_csv_do(csv_path, id, user_id):
+def parse_csv_do(csv_path, id, user_id, database_type):
     file_name, suffix = os.path.splitext(os.path.basename(csv_path))
     if suffix == '.csv':
         try:
@@ -24,7 +24,9 @@ def parse_csv_do(csv_path, id, user_id):
     else:
         df = pd.DataFrame()
         gr.Warning('数据类型不支持')
-    model_bge = load_bge_model_cached(bge_m3_model_path)
+
+    if database_type in ['lancedb', 'milvus']:
+        model_bge = load_bge_model_cached(bge_m3_model_path)
     result_list = []
     columns_list = df.columns
     if 'title' in columns_list and 'content' in columns_list:
@@ -36,7 +38,10 @@ def parse_csv_do(csv_path, id, user_id):
             info['title'] = row['title']
             info['content'] = row['content']
             info['page_count'] = str(index+1)
-            info['vector'] = model_bge.encode(input_str, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+            if database_type in ['lancedb', 'milvus']:
+                info['vector'] = model_bge.encode(input_str, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+            else:
+                info['vector'] = []
             info['file_from'] = file_name
             info['hash_check'] = hashlib.sha256((user_id+id+row['title']+row['content']).encode('utf-8')).hexdigest()
             result_list.append(info)

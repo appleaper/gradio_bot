@@ -7,10 +7,11 @@ from local.rag.util import split_by_heading
 from utils.tool import read_md_doc
 from utils.config_init import bge_m3_model_path
 
-def parse_markdown_do(md_path, id, user_id):
+def parse_markdown_do(md_path, id, user_id, database_type):
     markdown_data = read_md_doc(md_path)
     markdown_data_list = split_by_heading(markdown_data, level=2)
-    model_bge = load_bge_model_cached(bge_m3_model_path)
+    if database_type in ['lancedb', 'milvus']:
+        model_bge = load_bge_model_cached(bge_m3_model_path)
     file_name = os.path.basename(md_path)
     result_list = []
     for index, markdown_line in tqdm(enumerate(markdown_data_list), total=len(markdown_data_list)):
@@ -21,7 +22,10 @@ def parse_markdown_do(md_path, id, user_id):
         info['title'] = markdown_line["title"]
         info['content'] = markdown_line["content"]
         info['page_count'] = ''
-        info['vector'] = model_bge.encode(input_str, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        if database_type in ['lancedb', 'milvus']:
+            info['vector'] = model_bge.encode(input_str, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        else:
+            info['vector'] = []
         info['file_from'] = file_name
         info['hash_check'] = hashlib.sha256((user_id+id+markdown_line["title"]+markdown_line["content"]).encode('utf-8')).hexdigest()
         result_list.append(info)

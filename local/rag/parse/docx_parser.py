@@ -33,8 +33,9 @@ def split_text_into_chunks(text_list):
         chunks.append(combined_text[i:i + 1000])
     return chunks
 
-def parse_docx_do(doc_path, id, user_id):
-    model_bge = load_bge_model_cached(bge_m3_model_path)
+def parse_docx_do(doc_path, id, user_id, database_type):
+    if database_type in ['lancedb', 'milvus']:
+        model_bge = load_bge_model_cached(bge_m3_model_path)
     file_name = os.path.basename(doc_path)
     result_list = []
     sections = split_docx_into_chunks(doc_path)
@@ -48,7 +49,10 @@ def parse_docx_do(doc_path, id, user_id):
         info['title'] = ''
         info['content'] = text
         info['page_count'] = ''
-        info['vector'] = model_bge.encode(text, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        if database_type in ['lancedb', 'milvus']:
+            info['vector'] = model_bge.encode(text, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        else:
+            info['vector'] = []
         info['file_from'] = file_name
         info['hash_check'] = hashlib.sha256((user_id+id+text).encode('utf-8')).hexdigest()
         result_list.append(info)

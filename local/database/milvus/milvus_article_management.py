@@ -3,7 +3,9 @@ import gradio as gr
 import pandas as pd
 import numpy as np
 from pymilvus import MilvusClient, DataType
+from utils.tool import singleton
 
+@singleton
 class MilvusArticleManager:
     def __init__(self, host='127.0.0.1', port='19530'):
         self.host = host

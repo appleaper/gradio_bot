@@ -9,7 +9,7 @@ from local.rag.rag_model import load_bge_model_cached, load_model_cached
 from utils.tool import generate_unique_filename
 from utils.config_init import StepfunOcr_model_path, bge_m3_model_path
 
-def parse_pdf_do(pdf_path, id, user_id):
+def parse_pdf_do(pdf_path, id, user_id, database_type):
     model_path = StepfunOcr_model_path
     model, tokenizer = load_model_cached(model_path)
     # 打开PDF文件
@@ -17,7 +17,10 @@ def parse_pdf_do(pdf_path, id, user_id):
     # 遍历每一页
 
     info_list = []
-    model_bge = load_bge_model_cached(bge_m3_model_path)
+    if database_type in ['milvus', 'lancedb']:
+        model_bge = load_bge_model_cached(bge_m3_model_path)
+    else:
+        pass
     for page_num in tqdm(range(len(pdf_document)), total=len(pdf_document)):
         page = pdf_document.load_page(page_num)
 
@@ -39,7 +42,10 @@ def parse_pdf_do(pdf_path, id, user_id):
         info['file_from'] = pdf_path
         info['title'] = ''
         info['content'] = ocr_result
-        info['vector'] = model_bge.encode(ocr_result, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        if database_type in ['milvus', 'lancedb']:
+            info['vector'] = model_bge.encode(ocr_result, batch_size=1, max_length=8192)['dense_vecs'].tolist()
+        else:
+            info['vector'] = []
         info['hash_check'] = hashlib.sha256((user_id+id+ocr_result).encode('utf-8')).hexdigest()
         info_list.append(info)
     df = pd.DataFrame(info_list)
