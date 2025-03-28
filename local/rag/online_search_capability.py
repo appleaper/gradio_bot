@@ -1,10 +1,9 @@
-
-
 import json
 import requests
 import pandas as pd
 import gradio as gr
 from bs4 import BeautifulSoup
+from utils.tool import load_data
 
 def get_search_web_info(query):
     url = "https://api.bochaai.com/v1/web-search"
@@ -66,12 +65,21 @@ def deal_search_web_info(info):
             else:
                 continue
         info_df = pd.DataFrame(info_list)
-        return info_df
+        info_str = ''.join(info_df['info'].values)
+        return info_str
     else:
         gr.Warning('无法联网')
         return pd.DataFrame([])
 
 def online_search(query):
     search_info = get_search_web_info(query)
+    # data = load_data(r'C:\use\code\RapidOcr_small\data\temp.pkl')
+    # search_info = data['info']
     info_df = deal_search_web_info(search_info)
+
     return info_df
+
+
+if __name__ == '__main__':
+    query = '特朗普最新关税政策'
+    online_search('123')

@@ -14,34 +14,34 @@ from utils.tool import read_user_info_dict, reverse_dict
 from local.local_api import load_model_cached, load_rag_cached
 from utils.tool import encrypt_username
 from local.database.milvus.milvus_article_management import MilvusArticleManager
-from utils.config_init import articles_user_path, kb_article_map_path, database_dir, \
-    rag_top_k, max_history_len, max_rag_len, qwen_support_list, ollama_support_list, database_type, device_str
-from local.rag.parse.web_parse import
+from utils.config_init import rag_top_k, max_history_len, max_rag_len, qwen_support_list, ollama_support_list, device_str, akb_conf_class
+from local.rag.online_search_capability import online_search
 
-def add_rag_info(textbox, book_type, rag_model, database_name, top_k, user_name):
+def add_rag_info(textbox, book_type, rag_model, database_type, top_k, user_name):
     '''
     暂时去掉了模型审核内容是否相关的部分
     :param textbox: 用户提问
     :param book_type: 知识库
     :param rag_model: rag向量模型
-    :param database_name: lancedb数据库存放的位置
+    :param database_type: 数据库类型
     :param top_k: 取多少条相关记录
     :return: rag文字
     '''
     # model, tokenizer = load_model_cached('qwen2.5-0.5B-Instruct')
-    all_knowledge_bases_record = read_user_info_dict(user_name, kb_article_map_path)
-    inverted_dict = reverse_dict(read_user_info_dict(user_name, articles_user_path))
+    akb_conf_class.get_database_config(database_type)
+    all_knowledge_bases_record = read_user_info_dict(user_name, akb_conf_class.kb_article_map_path)
+    inverted_dict = reverse_dict(read_user_info_dict(user_name, akb_conf_class.articles_user_path))
     vector = rag_model.encode(textbox, batch_size=1, max_length=8192)['dense_vecs']
 
-    if database_type=='lancedb':
-        db = lancedb.connect(database_name)
+    if akb_conf_class.database_type=='lancedb':
+        db = lancedb.connect(akb_conf_class.lancedb_data_dir)
         records_df = pd.DataFrame()
         for table_name in all_knowledge_bases_record[book_type]:
             tb = db.open_table(inverted_dict[table_name])
             records = tb.search(vector).limit(top_k).to_pandas()
             records_df = pd.concat((records, records_df))
         sorted_records_df = records_df.sort_values(by='_distance').iloc[:top_k]
-    elif database_type == 'milvus':
+    elif akb_conf_class.database_type == 'milvus':
         user_id = encrypt_username(user_name)
         manager = MilvusArticleManager()
         articles_id_list = list(inverted_dict.values())
@@ -49,7 +49,7 @@ def add_rag_info(textbox, book_type, rag_model, database_name, top_k, user_name)
         res = manager.search_vectors_with_articles(user_id, vector, articles_id_list, limit=rag_top_k)
         sorted_records_df = pd.DataFrame(res)
     else:
-        raise gr.Error(f'{database_type} not support!')
+        raise gr.Error(f'{akb_conf_class.database_type} not support!')
     rag_str = ''
     now_str_count = 0
     for record_index, record in sorted_records_df.iterrows():
@@ -82,8 +82,19 @@ def add_rag_info(textbox, book_type, rag_model, database_name, top_k, user_name)
     # print(rag_str)
     return rag_str
 
-
-def local_chat(textbox, show_history, system_state, history, model_type, parm_b, book_type, is_connected_network,request: gr.Request):
+# textbox, chatbot, system_input, history_state, model_type, model_name, book_type, chat_database_type, is_connected_network
+def local_chat(
+        textbox,
+        show_history,
+        system_state,
+        history,
+        model_type,
+        parm_b,
+        book_type,
+        database_type,
+        is_connected_network,
+        request: gr.Request
+):
     '''
 
     :param textbox: 用户提问
@@ -103,10 +114,13 @@ def local_chat(textbox, show_history, system_state, history, model_type, parm_b,
         torch.cuda.empty_cache()
     model_name = model_type + '-' + parm_b
     if str(book_type) == 'None':
-        rag_str = '无'
+        rag_str = ''
     else:
         rag_model, rag_tokenizer = load_rag_cached('bge_m3')
-        rag_str = add_rag_info(textbox, book_type, rag_model, database_dir, rag_top_k, user_name)
+        rag_str = add_rag_info(textbox, book_type, rag_model, database_type, rag_top_k, user_name)
+    if is_connected_network:
+        online_search_info_str = online_search(textbox)
+        rag_str += online_search_info_str
     if show_history is None:
         history = []
     if len(history) == 0:
