@@ -16,13 +16,14 @@ from utils.tool import encrypt_username
 from local.database.milvus.milvus_article_management import MilvusArticleManager
 from utils.config_init import rag_top_k, max_history_len, max_rag_len, qwen_support_list, ollama_support_list, device_str, akb_conf_class
 from local.rag.online_search_capability import online_search
+from local.rag.search_data_from_database import get_info_from_mysql
+from local.rag.search_data_from_database import get_info_from_es
 
-def add_rag_info(textbox, book_type, rag_model, database_type, top_k, user_name):
+def add_rag_info(textbox, book_type, database_type, top_k, user_name):
     '''
     暂时去掉了模型审核内容是否相关的部分
     :param textbox: 用户提问
-    :param book_type: 知识库
-    :param rag_model: rag向量模型
+    :param book_type: 知识库的名字
     :param database_type: 数据库类型
     :param top_k: 取多少条相关记录
     :return: rag文字
@@ -31,9 +32,11 @@ def add_rag_info(textbox, book_type, rag_model, database_type, top_k, user_name)
     akb_conf_class.get_database_config(database_type)
     all_knowledge_bases_record = read_user_info_dict(user_name, akb_conf_class.kb_article_map_path)
     inverted_dict = reverse_dict(read_user_info_dict(user_name, akb_conf_class.articles_user_path))
-    vector = rag_model.encode(textbox, batch_size=1, max_length=8192)['dense_vecs']
+
 
     if akb_conf_class.database_type=='lancedb':
+        rag_model, rag_tokenizer = load_rag_cached('bge_m3')
+        vector = rag_model.encode(textbox, batch_size=1, max_length=8192)['dense_vecs']
         db = lancedb.connect(akb_conf_class.lancedb_data_dir)
         records_df = pd.DataFrame()
         for table_name in all_knowledge_bases_record[book_type]:
@@ -42,23 +45,27 @@ def add_rag_info(textbox, book_type, rag_model, database_type, top_k, user_name)
             records_df = pd.concat((records, records_df))
         sorted_records_df = records_df.sort_values(by='_distance').iloc[:top_k]
     elif akb_conf_class.database_type == 'milvus':
+        rag_model, rag_tokenizer = load_rag_cached('bge_m3')
+        vector = rag_model.encode(textbox, batch_size=1, max_length=8192)['dense_vecs']
         user_id = encrypt_username(user_name)
         manager = MilvusArticleManager()
         articles_id_list = list(inverted_dict.values())
         vector = np.array(vector, dtype=np.float32)
         res = manager.search_vectors_with_articles(user_id, vector, articles_id_list, limit=rag_top_k)
         sorted_records_df = pd.DataFrame(res)
+    elif akb_conf_class.database_type=='mysql':
+        sorted_records_df = get_info_from_mysql(textbox, book_type, top_k, user_name)
+    elif akb_conf_class.database_type=='es':
+        sorted_records_df = get_info_from_es(textbox, book_type, top_k, user_name)
     else:
         raise gr.Error(f'{akb_conf_class.database_type} not support!')
     rag_str = ''
     now_str_count = 0
     for record_index, record in sorted_records_df.iterrows():
-        rag_str_i = f'' \
-                   f'相关文档{record_index}:\n' \
-                   f'标题:{record["title"]}\n' \
-                   f'内容:{record["content"]}\n' \
-                   f'来源:{os.path.basename(record["file_from"])}的第{record["page_count"]}页/行\n\n'
-
+        if 'tile' in record and 'content' in record:
+            rag_str_i = f'相关文档{record_index}:\n标题:{record["title"]}\n内容:{record["content"]}\n\n'
+        else:
+            rag_str_i = ''
         if now_str_count < max_rag_len:
             rag_str += rag_str_i
             now_str_count += len(rag_str_i)
@@ -116,8 +123,8 @@ def local_chat(
     if str(book_type) == 'None':
         rag_str = ''
     else:
-        rag_model, rag_tokenizer = load_rag_cached('bge_m3')
-        rag_str = add_rag_info(textbox, book_type, rag_model, database_type, rag_top_k, user_name)
+
+        rag_str = add_rag_info(textbox, book_type, database_type, rag_top_k, user_name)
     if is_connected_network:
         online_search_info_str = online_search(textbox)
         rag_str += online_search_info_str

@@ -66,7 +66,7 @@ with gr.Blocks() as demo:
 
                 sumbit.click(local_chat,
                              inputs=[textbox, chatbot, system_input, history_state, model_type, model_name,
-                                     book_type, chat_database_type],
+                                     book_type, chat_database_type, is_connected_network],
                              outputs=[textbox, chatbot, history_state])
 
                 clear_history.click(fn=clear_session,
