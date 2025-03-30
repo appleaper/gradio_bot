@@ -1,5 +1,5 @@
 import os
-
+import time
 import pandas as pd
 import torch
 import ollama
@@ -7,9 +7,11 @@ import lancedb
 import gradio as gr
 import numpy as np
 from ollama import chat
-
+from gradio import ChatMessage
 from threading import Thread
 from transformers import TextIteratorStreamer
+
+from not_use.gradio.Helper.上传文件 import output_file_1
 from utils.tool import read_user_info_dict, reverse_dict
 from local.local_api import load_model_cached, load_rag_cached
 from utils.tool import encrypt_username
@@ -89,12 +91,96 @@ def add_rag_info(textbox, book_type, database_type, top_k, user_name):
     # print(rag_str)
     return rag_str
 
+def insert_role_setting(history, system_state):
+    '''添加角色设定和设定和使用的聊天记录数'''
+    if len(history) == 0:
+        history = [{"role":"system","content":system_state}]
+    elif len(history) >= max_history_len:
+        history = history[-max_history_len:]
+        history[0] = {"role": "system", "content": system_state}
+    else:
+        history[0] = {"role":"system","content":system_state}
+    return history
+
+def load_rag_system(user_ask, book_type, database_type, user_name, is_connected_network, history, system_state):
+    '''挂载rag'''
+    if str(book_type) == 'None':
+        rag_str = ''
+    else:
+        rag_str = add_rag_info(user_ask, book_type, database_type, rag_top_k, user_name)
+    if is_connected_network:
+        online_search_info_str = online_search(user_ask)
+        rag_str += online_search_info_str
+    insert_role_setting(history, system_state)
+    if len(rag_str) == 0:
+        history.append(
+            {'role':'user', 'content':f'{user_ask}'}
+        )
+    else:
+        history.append(
+            {'role':'user', 'content':f'相关文档：{rag_str},以上的参考文档只是相关性，参考时需要考虑其是否正确。请回答以下用户提问:{user_ask}'}
+        )
+    return history
+
+def deal_deepseek():
+    think_str = ''
+    start_time = time.time()
+    think_flag = False
+    begin_of_sentence_flag = False
+
+    if model_name.startswith('deepseek'):
+        response_think = ChatMessage(
+            content="",
+            metadata={"title": "_Thinking_ step-by-step", "id": 0, "status": "pending"}
+        )
+        yield response_think
+    else:
+        response_think = None
+    if model_name.startswith('deepseek'):
+        if '<｜begin▁of▁sentence｜>' in output:
+            begin_of_sentence_flag = True
+        else:
+            if '<think>' in output:
+                begin_of_sentence_flag = False
+            if '<think>' in output and begin_of_sentence_flag == False:
+                temp_list = output.split('<think>', 1)
+                think_str += temp_list[1]
+                response_think.content = think_str
+                think_flag = True
+                # begin_of_sentence_flag = False
+                yield response_think
+            elif '</think>' in output and begin_of_sentence_flag == False:
+                think_flag = False
+                str_list = output.split('</think>', 1)
+                think_str += str_list[0]
+                response_str += str_list[1]
+                response_think.content = think_str
+                response_think.metadata["status"] = "done"
+                response_think.metadata["duration"] = time.time() - start_time
+                yield response_think
+            else:
+                if think_flag == False and begin_of_sentence_flag == False:
+                    response_str += output
+                    response = [
+                        response_think,
+                        ChatMessage(
+                            content=response_str
+                        )
+                    ]
+                    yield response
+                elif think_flag == True and begin_of_sentence_flag == False:
+                    think_str += output
+                    response_think.content = think_str
+                    yield response_think
+                else:
+                    yield ''
+
+
 # textbox, chatbot, system_input, history_state, model_type, model_name, book_type, chat_database_type, is_connected_network
 def local_chat(
         textbox,
-        show_history,
-        system_state,
         history,
+        system_state,
         model_type,
         parm_b,
         book_type,
@@ -104,77 +190,53 @@ def local_chat(
 ):
     '''
 
-    :param textbox: 用户提问
-    :param show_history: 聊天组件
-    :param system_state: 角色设定
+    :param textbox: 用户输入，可能带了其他东西
     :param history: 历史记录
+    :param system_state: 角色设定
     :param model_type: 模型类别
     :param parm_b: 模型名字
-    :param steam_check_box: 流式输出与否，str类型
     :param book_type: 知识库的名字
+    :param database_type 数据库名字
     :param is_connected_network: 是否联网搜索
-    :param request: 当前登录用户的名字
+    :param request: 主要是用来获取用户名字
     :return:
     '''
     user_name = request.username
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     model_name = model_type + '-' + parm_b
-    if str(book_type) == 'None':
-        rag_str = ''
-    else:
-
-        rag_str = add_rag_info(textbox, book_type, database_type, rag_top_k, user_name)
-    if is_connected_network:
-        online_search_info_str = online_search(textbox)
-        rag_str += online_search_info_str
-    if show_history is None:
-        history = []
-    if len(history) == 0:
-        history = [{"role":"system","content":system_state}]
-    elif len(history) >= max_history_len:
-        history = history[-max_history_len:]
-        history[0] = {"role": "system", "content": system_state}
-    else:
-        history[0] = {"role":"system","content":system_state}
-    history.append(
-        {'role':'user', 'content':f'相关文档：{rag_str},以上的参考文档只是相关性，参考时需要考虑其是否正确。请回答以下用户提问:{textbox}'}
-    )
-    if model_type != 'ollama':
-        model, tokenizer = load_model_cached(model_name)
-    else:
-        model, tokenizer = None, None
+    user_ask = textbox['text']
+    user_upload_file = textbox['files']
+    history = load_rag_system(user_ask, book_type, database_type, user_name, is_connected_network, history, system_state)
     if model_name in qwen_support_list:
+        model, tokenizer = load_model_cached(model_name)
         conversion = tokenizer.apply_chat_template(history, add_generation_prompt=True, tokenize=False)
         model_inputs = tokenizer(conversion, return_tensors="pt").to(device_str)
         streamer = TextIteratorStreamer(tokenizer)
         generation_kwargs = dict(model_inputs, streamer=streamer, max_new_tokens=512)
         thread = Thread(target=model.generate, kwargs=generation_kwargs)
         thread.start()
-        response = ''
-        show_history.append(())
+        response_str = ''
         for new_text in streamer:
             output = new_text.replace(conversion, '')
             if output:
-                if output.endswith('<|im_end|>'):
-                    output = output.replace('<|im_end|>', '')
-                    history.append({'role': 'assistant', 'content': response})
-                show_history[-1] = (textbox,response)
-                response += output
-                yield '', show_history, history
+                if model_name.startswith('qwen'):
+                    if output.endswith('<|im_end|>'):
+                        output = output.replace('<|im_end|>', '')
+                    response_str += output
+                    yield response_str
+                else:
+                    yield output
     elif model_name in ollama_support_list:
         stream = chat(
             model=parm_b,
             messages=history,
             stream=True,
         )
-        show_history.append(())
         output_str = ''
         for chunk in stream:
-            response = chunk['message']['content']
-            show_history[-1] = (textbox, output_str)
-            output_str += response
-            yield '', show_history, []
+            output_str += chunk['message']['content']
+            yield output_str
     else:
         gr.Error(f'{model_name} not support')
         assert False, 'model name not support!'

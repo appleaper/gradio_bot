@@ -115,6 +115,8 @@ def load_local_video():
         else:
             random_mp4_file, random_mp4_file, start_radio, breast_radio, clothing_boxs, \
                 action_boxs, scene_boxs, other_boxs, describe_text, new_df = init_dataframe(random_mp4_file)
+            start_radio = '3分'
+            breast_radio = '未知'
             df = pd.concat((df, new_df))
             df.to_csv(video_mark_csv_path, index=False)
             return random_mp4_file, random_mp4_file, start_radio, breast_radio, \

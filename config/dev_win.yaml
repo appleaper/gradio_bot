@@ -1,6 +1,6 @@
 local_chat:
   max_history_len: 6
-  max_output_len: 4096
+  max_output_len: 10240
   qwen_support:
     - qwen2.5-7B-Instruct
     - qwen2.5-0.5B-Instruct

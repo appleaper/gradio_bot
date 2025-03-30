@@ -43,15 +43,16 @@ from local.user.audio.video_play import load_local_video, mark_video_like
 from local.user.audio.cut_video import video_cut
 from utils.shutdown_computer import shutdown_computer
 
+
 def adult_ui_show():
     gr.Markdown("# Local Video Player")
-    video_output = gr.Video(label="Play Local Video")
+    video_output = gr.Video(label="Play Local Video", autoplay=False)
     video_path = gr.Textbox(visible=False)
     # 使用按钮触发加载本地视频文件
     load_button = gr.Button("Load Local Video")
     title_text = gr.Textbox(interactive=True, label='标题')
     start_radio = gr.Radio(video_score_list, label='评分')
-    breast_radio = gr.Radio(breast_size_list, label='乳量')
+    breast_radio = gr.Radio(breast_size_list, label='乳量', value='未知')
     clothing_boxs = gr.CheckboxGroup(clothing_list, label="着装")
     action_boxs = gr.CheckboxGroup(action_list, label="动作")
     scene_boxs = gr.CheckboxGroup(scene_list, label="场景")
