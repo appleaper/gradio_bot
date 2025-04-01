@@ -1,21 +1,9 @@
 local_chat:
   max_history_len: 6
   max_output_len: 4096
-  qwen_support:
-    - qwen2.5-7B-Instruct
-    - qwen2.5-7B-Instruct-AWQ
-    - qwen2.5-1.5-Instruct-Coder
-    - qwen2.5-7B-Coder
-    - qwen2-1.5B-Instruct
-    - qwen2-7B-Instruct-AWQ
-    - qwen2.5-3B-Instruct
-    - qwen2.5-0.5B-Instruct
-    - deepseek-7B
-    - deepseek-1.5B
 
 rag:
   database:
-    choise: 'lancedb'
     lancedb:
       save:
         database_dir: 'data'

@@ -8,7 +8,6 @@ from PIL import Image
 from tqdm import tqdm
 from utils.tool import generate_unique_filename
 from transformers import AutoModel, AutoTokenizer
-from utils.config_init import name2path, device_str, tmp_dir_path
 
 def cached_model_loader(func):
     cache = {}

@@ -8,7 +8,6 @@ from tqdm import tqdm
 from local.rag.parse.fireredasr.models.fireredasr import FireRedAsr
 from local.rag.rag_model import load_bge_model_cached
 
-from utils.config_init import bge_m3_model_path, tmp_dir_path, voice_model_path, voice_chunk_size
 
 def transcribe_audio(audio_path, model):
     """

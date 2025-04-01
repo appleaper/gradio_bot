@@ -1,5 +1,4 @@
 import copy
-from utils.config_init import akb_conf_class
 from utils.tool import encrypt_username,reverse_dict,read_json_file, save_json_file
 from local.database.milvus.milvus_article_management import MilvusArticleManager
 

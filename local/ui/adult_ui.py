@@ -2,8 +2,10 @@ import os.path
 import yaml
 import gradio as gr
 
-from utils.config_init import config_dir
-audio_config_yaml_path = os.path.join(config_dir, 'audio.yaml')
+
+project_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+
+audio_config_yaml_path = os.path.join(project_dir, 'config', 'audio.yaml')
 # -----------------video----------------------------
 with open(audio_config_yaml_path, 'r', encoding='utf8') as file:
     conf_yaml = yaml.safe_load(file)

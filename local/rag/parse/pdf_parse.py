@@ -7,7 +7,6 @@ from tqdm import tqdm
 from PIL import Image
 from local.rag.rag_model import load_bge_model_cached, load_model_cached
 from utils.tool import generate_unique_filename
-from utils.config_init import StepfunOcr_model_path, bge_m3_model_path
 
 def parse_pdf_do(pdf_path, id, user_id, database_type):
     model_path = StepfunOcr_model_path

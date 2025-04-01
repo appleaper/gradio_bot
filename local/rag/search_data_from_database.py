@@ -7,7 +7,6 @@ from local.embedding_model.embedding_init import load_rag_model
 from utils.tool import encrypt_username,read_user_info_dict, reverse_dict
 from local.database.milvus.milvus_article_management import MilvusArticleManager
 from local.database.es.es_article_management import ElasticsearchManager
-from utils.config_init import akb_conf_class
 
 
 

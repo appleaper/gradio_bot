@@ -2,7 +2,6 @@ import os.path
 import subprocess
 import sys
 import gradio as gr
-from utils.config_init import project_dir
 
 def shutdown_computer():
     # 定义要执行的脚本路径

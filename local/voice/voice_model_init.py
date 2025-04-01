@@ -1,4 +1,3 @@
-from utils.config_init import name2path
 from local.rag.parse.fireredasr.models.fireredasr import FireRedAsr
 
 def load_voice_model(model_name):

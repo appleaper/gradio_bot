@@ -1,10 +1,8 @@
 import os
-import copy
 import lancedb
 import gradio as gr
 import pandas as pd
 from utils.tool import read_json_file, save_json_file, reverse_dict
-from utils.config_init import akb_conf_class, rag_data_csv_dir
 
 def create_or_add_data_to_lancedb(rag_database_name, table_name, df):
     '''创建数据表，并插入数据，若数据存在就跳过'''

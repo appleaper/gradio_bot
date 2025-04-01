@@ -7,7 +7,6 @@ from local.rag.parse.voice_parse import transcribe_audio
 from local.rag.parse.fireredasr.models.fireredasr import FireRedAsr
 from local.rag.rag_model import load_bge_model_cached
 
-from utils.config_init import bge_m3_model_path, voice_model_path, voice_chunk_size, tmp_dir_path
 
 
 

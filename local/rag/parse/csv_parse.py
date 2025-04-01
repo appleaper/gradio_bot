@@ -4,7 +4,6 @@ import gradio as gr
 import pandas as pd
 from tqdm import  tqdm
 from local.rag.rag_model import load_bge_model_cached
-from utils.config_init import bge_m3_model_path
 
 
 def parse_csv_do(csv_path, id, user_id, database_type):

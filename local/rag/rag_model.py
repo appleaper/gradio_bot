@@ -3,7 +3,7 @@ import hashlib
 import functools
 from FlagEmbedding import BGEM3FlagModel
 from transformers import AutoModel, AutoTokenizer
-from utils.config_init import device_str
+
 
 def cached_model_loader(func):
     cache = {}

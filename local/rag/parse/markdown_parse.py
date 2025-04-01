@@ -5,7 +5,6 @@ from tqdm import tqdm
 from local.rag.rag_model import load_bge_model_cached
 from local.rag.util import split_by_heading
 from utils.tool import read_md_doc
-from utils.config_init import bge_m3_model_path
 
 def parse_markdown_do(md_path, id, user_id, database_type):
     markdown_data = read_md_doc(md_path)

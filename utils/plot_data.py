@@ -1,10 +1,9 @@
 import GPUtil
-from config import conf_yaml
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
-from utils.config_init import font_path
+from utils.config_init import conf_class
 
-font_prop = FontProperties(fname=font_path)
+
 
 def get_gpu_memory_info():
     gpus = GPUtil.getGPUs()
@@ -14,7 +13,10 @@ def get_gpu_memory_info():
         total_memory = gpu.memoryTotal  # 显存总量
         gpu_memory_info.append({'used': used_memory, 'total': total_memory})
     return gpu_memory_info
-def create_pie_chart():
+
+
+def create_pie_chart(config_info):
+    font_prop = FontProperties(fname=config_info['font_path'])
     """
         创建饼图的函数。
 

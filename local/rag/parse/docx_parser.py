@@ -8,7 +8,6 @@ from docx import Document
 from collections import Counter
 from local.rag.rag_model import load_bge_model_cached
 
-from utils.config_init import bge_m3_model_path
 
 '''
 pip install python-docx

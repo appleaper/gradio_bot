@@ -10,13 +10,10 @@ from ollama import chat
 from gradio import ChatMessage
 from threading import Thread
 from transformers import TextIteratorStreamer
-
-from not_use.gradio.Helper.上传文件 import output_file_1
 from utils.tool import read_user_info_dict, reverse_dict
 from local.local_api import load_model_cached, load_rag_cached
 from utils.tool import encrypt_username
 from local.database.milvus.milvus_article_management import MilvusArticleManager
-from utils.config_init import rag_top_k, max_history_len, max_rag_len, qwen_support_list, ollama_support_list, device_str, akb_conf_class
 from local.rag.online_search_capability import online_search
 from local.rag.search_data_from_database import get_info_from_mysql
 from local.rag.search_data_from_database import get_info_from_es
@@ -175,6 +172,9 @@ def deal_deepseek():
                 else:
                     yield ''
 
+def deal_chat_upload_file():
+    '''处理用户上传的rag'''
+    pass
 
 # textbox, chatbot, system_input, history_state, model_type, model_name, book_type, chat_database_type, is_connected_network
 def local_chat(
@@ -182,8 +182,8 @@ def local_chat(
         history,
         system_state,
         model_type,
-        parm_b,
         book_type,
+        encoding_type,
         database_type,
         is_connected_network,
         request: gr.Request
@@ -207,6 +207,7 @@ def local_chat(
     model_name = model_type + '-' + parm_b
     user_ask = textbox['text']
     user_upload_file = textbox['files']
+
     history = load_rag_system(user_ask, book_type, database_type, user_name, is_connected_network, history, system_state)
     if model_name in qwen_support_list:
         model, tokenizer = load_model_cached(model_name)

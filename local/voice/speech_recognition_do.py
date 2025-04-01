@@ -3,7 +3,6 @@ import gradio as gr
 from local.qwen.qwen_api import qwen_model_detect
 from local.rag.parse.voice_parse import process_audio
 from local.local_api import load_voice_cached, load_model_cached
-from utils.config_init import voice_chunk_size, tmp_dir_path, voice_model_path
 
 def parse_voice(file_name):
     voice_model, _ = load_voice_cached('FireRedAsr')

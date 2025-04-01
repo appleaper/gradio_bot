@@ -2,7 +2,6 @@ import hashlib
 import pandas as pd
 from local.rag.rag_model import load_model_cached, load_bge_model_cached
 
-from utils.config_init import bge_m3_model_path, StepfunOcr_model_path
 
 def parse_image_do(file_name, id, user_id, database_type):
     info_list = []

@@ -1,9 +1,6 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from config import conf_yaml
-from utils.config_init import device_str
 
-max_output_len = conf_yaml['local_chat']['max_output_len']
 
 def qwen_model_init(model_path):
     model = AutoModelForCausalLM.from_pretrained(

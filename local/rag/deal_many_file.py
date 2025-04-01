@@ -17,7 +17,6 @@ from local.database.mysql.mysql_article_management import init_mysql
 from local.database.mysql.delete_data__from_mysql import drop_mysql_table
 from local.database.es.es_article_management import ElasticsearchManager
 from local.database.es.delete_data__from_es import drop_es_table
-from utils.config_init import rag_data_csv_dir, akb_conf_class
 
 
 def save_rag_group_csv_name(df2, rag_data_csv_dir, id, rag_list_config_path, user_name):

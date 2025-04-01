@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from utils.tool import singleton
-from utils.config_init import akb_conf_class
 
 
 @singleton
