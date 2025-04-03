@@ -31,6 +31,7 @@ def create_or_add_data_to_lancedb(rag_database_name, table_name, df):
             gr.Info(f'写入{now_count - old_count}条记录, 现有{now_count}条记录')
             return add_df
         else:
+            gr.Info(f'写入已经完成！ 数据已经存在于数据库中')
             return pd.DataFrame([])
 
 def drop_lancedb_table(need_detele_articles, all_articles_dict, user_name):

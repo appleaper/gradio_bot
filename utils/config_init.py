@@ -1,7 +1,7 @@
 import os
 import torch
 import gradio as gr
-from utils.tool import read_user_info_dict, singleton
+from utils.tool import read_user_info_dict, singleton, encrypt_username
 from utils.tool import save_json_file, read_json_file
 
 @singleton
@@ -12,6 +12,7 @@ class Config():
     def init_config(self, username):
         '''初始化全部配置'''
         self.config_dict = self.read_local_default_config()[username]
+        self.config_dict['user_id'] = encrypt_username(username)
         self.init_article_user_and_kb_mapping_file()
         self.gpu_is_available()
         self.init_mid_data_dir()

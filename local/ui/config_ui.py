@@ -37,6 +37,7 @@ def save_all_model_config(
         milvus_host, milvus_port,
         lancedb_data_dir,
         es_host, es_port, es_index_name, es_scheme,
+        ollama_host, ollama_port,
         request: gr.Request
 ):
     '''对用户提交的配置进行保存'''
@@ -82,6 +83,10 @@ def save_all_model_config(
             'scheme': es_scheme,
             'id2article': os.path.join(project_root_dir, 'data', 'database', 'es', 'user_article_mapping.json'),
             'article_group': os.path.join(project_root_dir, 'data', 'database', 'es', 'kb_article_mappping.json')
+        },
+        'ollama':{
+            'host': ollama_host,
+            'port': ollama_port,
         }
     }
     all_model_list, local_model_name_path = get_all_model_name_and_path(default_model_dir)
@@ -127,7 +132,11 @@ def init_new_user_config(model_dir, lancedb_data_dir):
         'default_chat_model': 'ollama_qwen2.5:0.5b',
         'default_embed_model': 'ollama_bge-m3:latest',
         'default_model_dir': model_dir,
-        'default_database_type': 'lancedb'
+        'default_database_type': 'lancedb',
+        'ollama':{
+            'host':'127.0.0.1',
+            'port':11434
+        }
     }
 
     # 数据库相关配置
@@ -215,7 +224,7 @@ def config_ui_show():
             data_base_type = gr.Dropdown(choices=[], label='选用的数据库', interactive=True)
             max_history_len = gr.Number(value=0, label='保存的聊天记录数', interactive=True)
         with gr.Row():
-            default_model_dir = gr.Textbox(value='', label='模型基本路径')
+            default_model_dir = gr.Textbox(value='', label='模型基本路径', interactive=True)
             chat_model_type = gr.Dropdown(choices=[], label="默认聊天模型", interactive=True, filterable=True)
             embedding_model_type = gr.Dropdown(choices=[], label='默认embedding模型选择', interactive=True)
         with gr.Row():
@@ -225,22 +234,25 @@ def config_ui_show():
         with gr.Row():
             chat_default_system = gr.Textbox(value='', interactive=True)
         with gr.Row():
-            mysql_host = gr.Textbox(value='localhost', label='mysql的地址')
-            mysql_port = gr.Number(value=3310, label='mysql的端口號')
-            mysql_user = gr.Textbox(value='root', label='mysql的用戶')
-            mysql_password = gr.Textbox(type='password', label='mysql用戶密碼', value='root')
-            mysql_database = gr.Textbox(value='gradio_bot', label='mysql数据库名')
-            mysql_table = gr.Textbox(value='article_info', label='mysql数据表名')
+            mysql_host = gr.Textbox(value='localhost', label='mysql的地址', interactive=True)
+            mysql_port = gr.Number(value=3310, label='mysql的端口號', interactive=True)
+            mysql_user = gr.Textbox(value='root', label='mysql的用戶', interactive=True)
+            mysql_password = gr.Textbox(type='password', label='mysql用戶密碼', value='root', interactive=True)
+            mysql_database = gr.Textbox(value='gradio_bot', label='mysql数据库名', interactive=True)
+            mysql_table = gr.Textbox(value='article_info', label='mysql数据表名', interactive=True)
         with gr.Row():
-            milvus_host = gr.Textbox(value='127.0.0.1', label='milvus地址')
-            milvus_port = gr.Number(value=19530, label='milvus端口号')
+            milvus_host = gr.Textbox(value='127.0.0.1', label='milvus地址', interactive=True)
+            milvus_port = gr.Number(value=19530, label='milvus端口号', interactive=True)
         with gr.Row():
-            lancedb_data_dir = gr.Textbox(value='', label='lancedb数据保存路径')
+            lancedb_data_dir = gr.Textbox(value='', label='lancedb数据保存路径', interactive=True)
         with gr.Row():
-            es_host = gr.Textbox(value='localhost', label='es的地址')
-            es_port = gr.Number(value=9200, label='es的端口号')
-            es_index_name = gr.Textbox(value='article_index', label='es的index名字')
-            es_scheme = gr.Textbox(value='http', label='es连接时使用的协议')
+            es_host = gr.Textbox(value='localhost', label='es的地址', interactive=True)
+            es_port = gr.Number(value=9200, label='es的端口号', interactive=True)
+            es_index_name = gr.Textbox(value='article_index', label='es的index名字', interactive=True)
+            es_scheme = gr.Textbox(value='http', label='es连接时使用的协议', interactive=True)
+        with gr.Row():
+            ollama_host = gr.Textbox(value='127.0.0.1', label='ollama的地址', interactive=True)
+            ollama_port = gr.Number(value=11434, label='ollama端口号', interactive=True)
         with gr.Row():
             save_button = gr.Button(value='保存配置')
 
@@ -255,7 +267,8 @@ def config_ui_show():
             mysql_host, mysql_port,mysql_user,mysql_password, mysql_database, mysql_table,
             milvus_host,milvus_port,
             lancedb_data_dir,
-            es_host, es_port, es_index_name, es_scheme
+            es_host, es_port, es_index_name, es_scheme,
+            ollama_host, ollama_port
         ]
     )
     def all_config_load(all_config):
@@ -295,6 +308,10 @@ def config_ui_show():
         es_port = gr.Number(value=all_config['es']['port'], label='es的端口号')
         es_index_name = gr.Textbox(value=all_config['es']['index_name'], label='es的index名字')
         es_scheme = gr.Textbox(value=all_config['es']['scheme'], label='es连接时使用的协议')
+
+        '''ollama配置'''
+        ollama_host = gr.Textbox(value='127.0.0.1', label='ollama的地址', interactive=True)
+        ollama_port = gr.Number(value=11434, label='ollama端口号', interactive=True)
         return (data_base_type, max_history_len,
                 default_model_dir, chat_model_type, embedding_model_type,
             max_output_len, rag_top_k, max_rag_len,
@@ -302,7 +319,9 @@ def config_ui_show():
             mysql_host, mysql_port,mysql_user,mysql_password, mysql_database, mysql_table,
             milvus_host,milvus_port,
             lancedb_data_dir,
-            es_host, es_port, es_index_name, es_scheme)
+            es_host, es_port, es_index_name, es_scheme,
+            ollama_host, ollama_port
+                )
 
     save_button.click(
         save_all_model_config,
@@ -314,7 +333,8 @@ def config_ui_show():
             mysql_host, mysql_port,mysql_user,mysql_password, mysql_database, mysql_table,
             milvus_host,milvus_port,
             lancedb_data_dir,
-            es_host, es_port, es_index_name, es_scheme
+            es_host, es_port, es_index_name, es_scheme,
+            ollama_host, ollama_port
         ],
         outputs=None
     )

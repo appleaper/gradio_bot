@@ -199,6 +199,16 @@ def get_ollama_model_list():
         model_list.append(model.model)
     return model_list
 
+def generate_unique_id():
+    '''生成唯一数'''
+    unique_id = uuid.uuid4()
+    unique_id_str = str(unique_id)
+    unique_id_without_hyphen = unique_id_str.replace("-", "")
+    return unique_id_without_hyphen
+
+def hash_code(text):
+    return hashlib.sha256((text).encode('utf-8')).hexdigest()
+
 if __name__ == '__main__':
     csv_path = '/home/pandas/snap/code/RapidOcr/database_data/rag/data_csv/中国历代政治得失分块版.csv.csv'
     book_path = './中国历代政治得失分块版.md'

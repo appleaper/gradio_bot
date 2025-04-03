@@ -1,25 +1,78 @@
 import os
+import re
 import fitz
-import uuid
 import hashlib
 import pandas as pd
 from tqdm import tqdm
 from PIL import Image
-from local.rag.rag_model import load_bge_model_cached, load_model_cached
-from utils.tool import generate_unique_filename
+from utils.tool import generate_unique_filename, hash_code
+from local.model.other_model.aigot import OCR_AiGot
 
-def parse_pdf_do(pdf_path, id, user_id, database_type):
-    model_path = StepfunOcr_model_path
-    model, tokenizer = load_model_cached(model_path)
+ocr_class = OCR_AiGot()
+
+def chunk_str(
+        user_id,
+        article_id,
+        page_num,
+        pdf_file_name,
+        ocr_result,
+        emb_model_name,
+        database_type,
+        embedding_class=None
+):
+    '''包装每一次编码的数据'''
+    info = {}
+    info['user_id'] = user_id
+    info['article_id'] = article_id
+    info['page_count'] = str(page_num)
+    info['file_from'] = pdf_file_name
+    info['title'] = ''
+    info['content'] = ocr_result
+    info['embed_model_name'] = emb_model_name
+    info['platform'] = embedding_class.platform
+    if database_type in ['milvus', 'lancedb']:
+        # bge_m3是返回numpy，(1024,)  ollama返回的是[[...]]，形状是(1,1024)
+        vector = embedding_class.parse_single_sentence(
+            model_name=emb_model_name,
+            sentence=ocr_result
+        )[0]
+        info['vector'] = vector
+    else:
+        info['vector'] = []
+    info['database_type'] = database_type
+    hash_content = user_id + article_id + ocr_result + emb_model_name + database_type
+    info['hash_check'] = hashlib.sha256((hash_content).encode('utf-8')).hexdigest()
+    return info
+
+def slice_string(text, chunk_size=3000, punctuation=r'[。！？]'):
+    '''对输入数据进行分块'''
+    result = []
+    start = 0
+    while start < len(text):
+        end = min(start + chunk_size, len(text))
+        # 从 chunk_size 字处往前找标点符号
+        while end > start and not re.match(punctuation, text[end - 1]):
+            end -= 1
+        # 如果没找到合适的标点，就按 chunk_size 字切
+        if end == start:
+            end = min(start + chunk_size, len(text))
+        result.append(text[start:end])
+        start = end
+    return result
+
+def parse_pdf_do(pdf_path, user_id, database_type, embedding_class, config_info):
+
+    model_path = config_info['local_model_name_path_dict']['local_stepfun-aiGOT-OCR2_0']
+    emb_model_name = embedding_class.model_name
+    pdf_file_name = os.path.basename(pdf_path)
+    article_id = hash_code(os.path.splitext(pdf_file_name)[0])
+
+    ocr_class.init_mdoel(model_path)
     # 打开PDF文件
     pdf_document = fitz.open(pdf_path)
     # 遍历每一页
 
     info_list = []
-    if database_type in ['milvus', 'lancedb']:
-        model_bge = load_bge_model_cached(bge_m3_model_path)
-    else:
-        pass
     for page_num in tqdm(range(len(pdf_document)), total=len(pdf_document)):
         page = pdf_document.load_page(page_num)
 
@@ -30,22 +83,15 @@ def parse_pdf_do(pdf_path, id, user_id, database_type):
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         output_path = generate_unique_filename('jpg')
         img.save(output_path)
-        ocr_result = model.chat(tokenizer, output_path, ocr_type='format')
+        ocr_result = ocr_class.model.chat(ocr_class.tokenizer, output_path, ocr_type='format')
         if os.path.exists(output_path):
             # 删除文件
             os.remove(output_path)
-        info = {}
-        info['user_id'] = user_id
-        info['article_id'] = id
-        info['page_count'] = str(page_num)
-        info['file_from'] = pdf_path
-        info['title'] = ''
-        info['content'] = ocr_result
-        if database_type in ['milvus', 'lancedb']:
-            info['vector'] = model_bge.encode(ocr_result, batch_size=1, max_length=8192)['dense_vecs'].tolist()
-        else:
-            info['vector'] = []
-        info['hash_check'] = hashlib.sha256((user_id+id+ocr_result).encode('utf-8')).hexdigest()
-        info_list.append(info)
+
+        if len(ocr_result) > 0:
+            text_list = slice_string(ocr_result, punctuation=r'[，。！？,.]')
+            for text in text_list:
+                info = chunk_str(user_id, article_id, page_num, pdf_file_name, text, emb_model_name, database_type, embedding_class)
+                info_list.append(info)
     df = pd.DataFrame(info_list)
     return df

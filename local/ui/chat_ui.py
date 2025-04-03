@@ -1,8 +1,7 @@
 import pandas as pd
 import gradio as gr
-from utils.tool import read_md_doc, singleton, reverse_dict
+from utils.tool import read_md_doc, singleton
 from utils.plot_data import create_pie_chart
-from local.chat_model.chat_do import local_chat
 from utils.config_init import conf_class
 from local.rag.deal_rag import DealRag, DealChat
 
@@ -132,8 +131,7 @@ def chat_ui_show(demo):
         with gr.Row():
             chatbot = gr.ChatInterface(
                 chat_class.chat,
-                additional_inputs=[system_input, model_type,
-                                   book_type, chat_embedding_type, chat_database_type, is_connected_network],
+                additional_inputs=[model_type, chat_embedding_type, chat_database_type, book_type,is_connected_network, system_input, config_info],
                 multimodal=True,
                 type="messages",  # 控制多媒体上传
                 editable=True,  # 用户可以编辑过去的消息重新生成
@@ -170,12 +168,9 @@ def chat_ui_show(demo):
             kb_database_type = gr.Dropdown(choices=[], label='关联的数据库', value='lancedb', interactive=True)
             kb_embedding_type = gr.Dropdown(choices=[], label='编码方式', interactive=True)
         # 可选文章复选框组
-        selectable_documents_checkbox_group = gr.CheckboxGroup(
-            choices=[], label='可选文章', interactive=True
-        )
+        selectable_documents_checkbox_group = gr.CheckboxGroup(choices=[], label='可选文章', interactive=True)
         # 可选知识库复选框组
-        selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(
-            choices=[], label='已有知识库')
+        selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=[], label='已有知识库', interactive=True)
         # 新建知识库名输入文本框
         new_kb_name_textbox = gr.Textbox(lines=1, label='知识库名', placeholder='给新建的知识库起个名字吧')
         # 新建知识库按钮
@@ -203,9 +198,9 @@ def chat_ui_show(demo):
         with gr.Row():
             search_info_content = gr.Markdown(label='搜索结果正文')
 
-    with gr.TabItem('ToDo'):
-        need_to_do_string = read_md_doc('../../计划和目前的bug.md')
-        gr.Markdown(need_to_do_string)
+    # with gr.TabItem('ToDo'):
+    #     need_to_do_string = read_md_doc('../../计划和目前的bug.md')
+    #     gr.Markdown(need_to_do_string)
 
     demo.load(
         ui_class.init_default_value_ui,
@@ -244,14 +239,14 @@ def chat_ui_show(demo):
         outputs=[
             rag_checkboxgroup, book_type,
             selectable_documents_checkbox_group, selectable_knowledge_bases_checkbox_group,
-            search_kb_range
+            search_kb_range, config_info
         ]
     )
 
     rag_submit_files_button.click(
         rag_class.add_article,
         inputs=[rag_database_type, rag_embedding_type, is_same_group, knowledge_name, rag_upload_file, config_info],
-        outputs=[rag_checkboxgroup, selectable_documents_checkbox_group, config_info]
+        outputs=[rag_checkboxgroup, selectable_documents_checkbox_group, is_same_group, knowledge_name, rag_upload_file, config_info]
     )
 
     create_kb_group_button.click(
