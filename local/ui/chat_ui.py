@@ -111,9 +111,12 @@ class UiDataDeal():
                 book_type, rag_checkboxgroup, selectable_documents_checkbox_group,
                 selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table, search_kb_range)
 
-    def search_click_for_details(self):
+    def search_click_for_details(self, evt: gr.SelectData):
         '''搜素结果点击获取细节'''
-        return
+        title = evt.row_value[0]
+        content = evt.row_value[1]
+        file_from = evt.row_value[2]
+        return title, file_from, content
 
 def chat_ui_show(demo):
     ui_class = UiDataDeal()
@@ -239,7 +242,7 @@ def chat_ui_show(demo):
         outputs=[
             rag_checkboxgroup, book_type,
             selectable_documents_checkbox_group, selectable_knowledge_bases_checkbox_group,
-            search_kb_range, config_info
+            search_kb_range, knowledge_base_info_json_table, config_info
         ]
     )
 
@@ -252,7 +255,7 @@ def chat_ui_show(demo):
     create_kb_group_button.click(
         rag_class.add_article_group,
         inputs=[kb_database_type, kb_embedding_type, selectable_documents_checkbox_group, new_kb_name_textbox, config_info],
-        outputs=[selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table, book_type, search_kb_range, config_info]
+        outputs=[selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table, book_type, search_kb_range, selectable_documents_checkbox_group, new_kb_name_textbox, selectable_knowledge_bases_checkbox_group, config_info]
     )
 
     delete_kb_button.click(
