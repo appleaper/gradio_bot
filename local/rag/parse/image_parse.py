@@ -21,3 +21,27 @@ def parse_image_do(file_path, user_id, database_type, embedding_class, config_in
             info_list.append(info)
     df = pd.DataFrame(info_list)
     return df
+
+def standalone_image_analysis(file_path_list, model_dir):
+    '''独立的解析图片'''
+    project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+    tmp_dir = os.path.join(project_dir, 'data', 'tmp')
+    save_path = os.path.join(tmp_dir, 'result.csv')
+    ocr_class.init_mdoel(model_dir)
+    out_list = []
+    ocr_str = ''
+    for index, file_path in enumerate(file_path_list):
+
+        info = {}
+        ocr_result = ocr_class.model.chat(ocr_class.tokenizer, file_path, ocr_type='format')
+        filename = os.path.basename(file_path)
+        file_name, suffix = os.path.splitext(filename)
+        info['file_name'] = file_name
+        info['result'] = ocr_result
+        out_list.append(info)
+        if index == 0:
+            ocr_str += ocr_result
+    df = pd.DataFrame(out_list)
+    df.to_csv(save_path, encoding='utf8', index=False)
+    ocr_class.unload_model()
+    return [], ocr_str, save_path

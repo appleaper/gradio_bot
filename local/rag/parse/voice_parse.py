@@ -136,9 +136,8 @@ def process_audio(input_mp3_file, output_folder, model):
 
     return voice_str
 
-
+voice_model = VoiceAED()
 def parse_voice_do(file_path, user_id, database_type, embedding_class, config_info):
-    voice_model = VoiceAED()
     '''对音频进行解析'''
     voice_model.init_mdoel(config_info['local_model_name_path_dict']['local_FireRedASR-AED-L'])
     tmp_dir = config_info['tmp_dir']
@@ -155,8 +154,15 @@ def parse_voice_do(file_path, user_id, database_type, embedding_class, config_in
     df = pd.DataFrame(info_list)
     return df
 
+
+def standalone_voice_analysis(file_path, model_dir):
+    '''独立的解析图片'''
+    voice_model.init_mdoel(model_dir)
+    project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+    tmp_dir = os.path.join(project_dir, 'data', 'temp')
+    voice_str = process_audio(file_path, tmp_dir, voice_model.model)
+    return voice_str, []
+
+
 if __name__ == '__main__':
-    file_name = '/home/pandas/下载/1599061619.mp3'
-    result = parse_voice_do(file_name)
-    print(result.iloc[0])
-    print(result.iloc[0].content)
+    pass

@@ -1,11 +1,21 @@
 import os
-import hashlib
+import re
 import pandas as pd
-from tqdm import tqdm
-from local.rag.rag_model import load_bge_model_cached
-from local.rag.util import split_by_heading
 from utils.tool import read_md_doc
 from utils.tool import hash_code, slice_string, chunk_str
+
+def split_by_heading(text, level=2):
+    # 使用正则表达式匹配二级标题
+    pattern = r'(' +'#'*level +r' .+?)(?=\n##|\Z)'
+    matches = re.findall(pattern, text, re.DOTALL)
+
+    # 将匹配到的标题和内容分割成列表
+    sections = []
+    for match in matches:
+        # 将标题和内容分开
+        title, content = match.split('\n', 1)
+        sections.append({'title': title.strip(), 'content': content.strip()})
+    return sections
 
 def parse_markdown_do(file_path, user_id, database_type, emb_model_class):
     markdown_data = read_md_doc(file_path)

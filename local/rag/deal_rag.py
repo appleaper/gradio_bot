@@ -85,7 +85,6 @@ class ParseFileType():
         pass
 
     def parse_many_files(self, files_path, database_type, embedding_type, config_info):
-        #todo因为uuid的原因，导致hash失去效果了
         self.emb_model_class = self.emb_class.load_model(embedding_type, config_info)
         user_id = config_info['user_id']
         result_list = []
