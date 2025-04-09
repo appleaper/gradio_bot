@@ -1,0 +1,139 @@
+{
+    "a": {
+        "database_type": [
+            "lancedb",
+            "milvus",
+            "mysql",
+            "es"
+        ],
+        "saved_chat_record_count": 6,
+        "default_model_dir": "C:\\use\\code\\RapidOcr_small\\model",
+        "default_chat_model": "ollama_qwen2.5:0.5b",
+        "default_embed_model": "ollama_bge-m3:latest",
+        "all_model_list": [
+            "ollama_deepseek-r1:1.5b",
+            "ollama_bge-m3:latest",
+            "ollama_all-minilm:latest",
+            "ollama_pankajrajdeo/sentence-transformers_all-minilm-l6-v2:latest",
+            "ollama_quentinz/bge-small-zh-v1.5:latest",
+            "ollama_qwen2.5:0.5b"
+        ],
+        "local_model_name_path_dict": {},
+        "max_output_len": 10240,
+        "rag_top_k": 10,
+        "max_rag_len": 10000,
+        "caht_default_system": "You are a helpful assistant.",
+        "default_database_type": "lancedb",
+        "mysql": {
+            "host": "localhost",
+            "port": 3310,
+            "user": "root",
+            "password": "root",
+            "database": "gradio_bot",
+            "table": "article_info",
+            "id2article": "C:\\use\\code\\RapidOcr_small\\data\\database\\mysql\\user_article_mapping.json",
+            "article_group": "C:\\use\\code\\RapidOcr_small\\data\\database\\mysql\\kb_article_mappping.json"
+        },
+        "milvus": {
+            "host": "127.0.0.1",
+            "port": 19530,
+            "id2article": "C:\\use\\code\\RapidOcr_small\\data\\database\\milvus\\user_article_mapping.json",
+            "article_group": "C:\\use\\code\\RapidOcr_small\\data\\database\\milvus\\kb_article_mappping.json"
+        },
+        "lancedb": {
+            "data_dir": "C:\\use\\code\\RapidOcr_small\\data\\database\\lancedb\\data",
+            "id2article": "C:\\use\\code\\RapidOcr_small\\data\\database\\lancedb\\user_article_mapping.json",
+            "article_group": "C:\\use\\code\\RapidOcr_small\\data\\database\\lancedb\\kb_article_mappping.json"
+        },
+        "es": {
+            "host": "localhost",
+            "port": 9200,
+            "index_name": "article_index",
+            "scheme": "http",
+            "id2article": "C:\\use\\code\\RapidOcr_small\\data\\database\\es\\user_article_mapping.json",
+            "article_group": "C:\\use\\code\\RapidOcr_small\\data\\database\\es\\kb_article_mappping.json"
+        },
+        "ollama": {
+            "host": "127.0.0.1",
+            "port": 11434
+        }
+    },
+    "pandas": {
+        "database_type": [
+            "lancedb",
+            "milvus",
+            "mysql",
+            "es"
+        ],
+        "saved_chat_record_count": 6,
+        "default_model_dir": "C:\\use\\model",
+        "default_chat_model": "local_Qwen25_05B_Instruct",
+        "default_embed_model": "local_BAAIbge-m3",
+        "all_model_list": [
+            "ollama_deepseek-r1:1.5b",
+            "ollama_bge-m3:latest",
+            "ollama_all-minilm:latest",
+            "ollama_pankajrajdeo/sentence-transformers_all-minilm-l6-v2:latest",
+            "ollama_quentinz/bge-small-zh-v1.5:latest",
+            "ollama_qwen2.5:0.5b",
+            "local_BAAIbge-m3",
+            "local_deepseek_r1_distill_qwen_1_5b",
+            "local_FireRedASR-AED-L",
+            "local_ltp_tiny",
+            "local_openbmbMiniCPM-V-2_6-int4",
+            "local_qwen2.5-7b-instruct",
+            "local_Qwen25_05B_Instruct",
+            "local_QwenQwen2.5-7B-Instruct-AWQ",
+            "local_stepfun-aiGOT-OCR2_0"
+        ],
+        "local_model_name_path_dict": {
+            "local_BAAIbge-m3": "C:\\use\\model\\BAAIbge-m3",
+            "local_deepseek_r1_distill_qwen_1_5b": "C:\\use\\model\\deepseek_r1_distill_qwen_1_5b",
+            "local_FireRedASR-AED-L": "C:\\use\\model\\FireRedASR-AED-L",
+            "local_ltp_tiny": "C:\\use\\model\\ltp_tiny",
+            "local_openbmbMiniCPM-V-2_6-int4": "C:\\use\\model\\openbmbMiniCPM-V-2_6-int4",
+            "local_qwen2.5-7b-instruct": "C:\\use\\model\\qwen2.5-7b-instruct",
+            "local_Qwen25_05B_Instruct": "C:\\use\\model\\Qwen25_05B_Instruct",
+            "local_QwenQwen2.5-7B-Instruct-AWQ": "C:\\use\\model\\QwenQwen2.5-7B-Instruct-AWQ",
+            "local_stepfun-aiGOT-OCR2_0": "C:\\use\\model\\stepfun-aiGOT-OCR2_0"
+        },
+        "max_output_len": 10240,
+        "rag_top_k": 10,
+        "max_rag_len": 10000,
+        "caht_default_system": "You are a helpful assistant.",
+        "default_database_type": "lancedb",
+        "mysql": {
+            "host": "localhost",
+            "port": 3310,
+            "user": "root",
+            "password": "root",
+            "database": "gradio_bot",
+            "table": "article_info",
+            "id2article": "C:\\use\\code\\RapidOcr_small\\data\\database\\mysql\\user_article_mapping.json",
+            "article_group": "C:\\use\\code\\RapidOcr_small\\data\\database\\mysql\\kb_article_mappping.json"
+        },
+        "milvus": {
+            "host": "127.0.0.1",
+            "port": 19530,
+            "id2article": "C:\\use\\code\\RapidOcr_small\\data\\database\\milvus\\user_article_mapping.json",
+            "article_group": "C:\\use\\code\\RapidOcr_small\\data\\database\\milvus\\kb_article_mappping.json"
+        },
+        "lancedb": {
+            "data_dir": "C:\\use\\code\\RapidOcr_small\\data\\database\\lancedb\\data",
+            "id2article": "C:\\use\\code\\RapidOcr_small\\data\\database\\lancedb\\user_article_mapping.json",
+            "article_group": "C:\\use\\code\\RapidOcr_small\\data\\database\\lancedb\\kb_article_mappping.json"
+        },
+        "es": {
+            "host": "localhost",
+            "port": 9200,
+            "index_name": "article_index",
+            "scheme": "http",
+            "id2article": "C:\\use\\code\\RapidOcr_small\\data\\database\\es\\user_article_mapping.json",
+            "article_group": "C:\\use\\code\\RapidOcr_small\\data\\database\\es\\kb_article_mappping.json"
+        },
+        "ollama": {
+            "host": "127.0.0.1",
+            "port": 11434
+        }
+    }
+}
