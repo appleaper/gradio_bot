@@ -1,1 +1,0 @@
-docker run -d -p 7680:7680 --gpus all -v C:\use\code\RapidOcr_small:/app --name gradio_bot 3294f5cc2c01 python ./ui_demo1.py
