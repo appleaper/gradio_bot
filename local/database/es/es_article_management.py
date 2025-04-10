@@ -167,16 +167,17 @@ def insert_data(user_name):
                 hash_check=hash_check
             )
 
+
 if __name__ == "__main__":
     from tqdm import tqdm
     from utils.tool import read_json_file, save_rag_group_name, encrypt_username
     from utils.config_init import akb_conf_class
     user_name = 'pandas'
     user_id = encrypt_username(user_name)
-    insert_data(user_name)
+    # insert_data(user_name)
 
     # # 查询数据示例
-    # es_manager = ElasticsearchManager(index_name="article_index")
+    es_manager = ElasticsearchManager(index_name="article_index")
     # es_manager.delete_all_data()
     # count = es_manager.count_data()
     # print(f"Elasticsearch 中 {es_manager.index_name} 索引的数据总量为: {count}")
