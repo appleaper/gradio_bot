@@ -1,3 +1,5 @@
+![](./data/image/1.png)
+
 # 大致功能
 
 1. 大模型本地聊天。支持qwen，deepseek本地模型加载

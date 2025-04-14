@@ -44,4 +44,4 @@ def standalone_image_analysis(file_path_list, model_dir):
     df = pd.DataFrame(out_list)
     df.to_csv(save_path, encoding='utf8', index=False)
     ocr_class.unload_model()
-    return [], ocr_str, save_path
+    return [], ocr_str, save_path, file_path_list[0]

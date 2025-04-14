@@ -21,7 +21,7 @@ with gr.Blocks() as demo:
             voice_ui_show()
 
         with gr.TabItem('默认配置'):
-            config_ui_show()
+            config_ui_show(demo)
 
 
 # demo.launch(server_name='0.0.0.0')

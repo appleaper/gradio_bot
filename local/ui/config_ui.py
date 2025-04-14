@@ -215,7 +215,7 @@ def demo_config(request:gr.Request):
             config_dict = config_dict_all[user_name]
     return config_dict
 
-def config_ui_show():
+def config_ui_show(demo):
     '''默认基配置的界面'''
     with gr.Group():
         all_config = gr.JSON(visible=False)
