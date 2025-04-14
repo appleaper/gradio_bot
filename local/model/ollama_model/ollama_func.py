@@ -16,7 +16,14 @@ class OllamaClient(EmbBase):
         client = Client(
             host=f'http://{self.host}:{self.port}',
         )
-        return client
+        try:
+            res = client.list()
+            print('ollama连接成功')
+            return client
+        except:
+            print('ollama连接失败')
+            return None
+
 
     def generate_text(self, model_name, messages, stream=True):
         '''流式输出'''
@@ -56,12 +63,12 @@ if __name__ == '__main__':
     client.check_connection()
     models = client.list_models()
     print(models)
-    input_text = '为什么天空是蓝色的?'
-    model_name = 'qwen2.5:0.5b'
-    messages = [{'role': 'user', 'content': input_text}]
-    stream = client.model_stream_detect(messages, model_name)
-    for chunk in stream:
-        print(chunk['message']['content'], end='', flush=True)
+    # input_text = '为什么天空是蓝色的?'
+    # model_name = 'qwen2.5:0.5b'
+    # messages = [{'role': 'user', 'content': input_text}]
+    # stream = client.model_stream_detect(messages, model_name)
+    # for chunk in stream:
+    #     print(chunk['message']['content'], end='', flush=True)
 
     # stream = client.generate_text(
     #     model_name='qwen2.5:0.5b',

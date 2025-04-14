@@ -2,7 +2,7 @@
 import gradio as gr
 
 from local.ui.ocr_ui import ocr_ui_show
-# from local.ui.adult_ui import adult_ui_show
+from local.ui.config_ui import config_ui_show
 from local.ui.voice_ui import voice_ui_show
 from local.ui.chat_ui import chat_ui_show
 
@@ -19,6 +19,9 @@ with gr.Blocks() as demo:
 
         with gr.TabItem('语音识别'):
             voice_ui_show()
+
+        with gr.TabItem('默认配置'):
+            config_ui_show()
 
 
 # demo.launch(server_name='0.0.0.0')

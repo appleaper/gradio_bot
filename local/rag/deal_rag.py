@@ -167,6 +167,7 @@ class DealDataToDB():
                     id2article_dict[username][rag_embedding_type][art_id] = art_name
         return id2article_dict
 
+
     def save_df_to_mysql(self, rag_embedding_type, info_list, is_same_group, article_name, config_info):
         id_list, name_list = self.create_article_id(is_same_group, article_name, info_list)
         save_all_df = pd.DataFrame()
