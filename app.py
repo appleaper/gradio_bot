@@ -5,20 +5,21 @@ from local.ui.ocr_ui import ocr_ui_show
 from local.ui.config_ui import config_ui_show
 from local.ui.voice_ui import voice_ui_show
 from local.ui.chat_ui import chat_ui_show
+from local.ui.text_cls_ui import text_cls_show
 
 with gr.Blocks() as demo:
     with gr.Tabs():
         with gr.TabItem("聊天机器人"):
             chat_ui_show(demo)
 
-        # with gr.TabItem("本地视频播放"):
-        #     adult_ui_show()
-
         with gr.TabItem('ocr识别'):
             ocr_ui_show()
 
         with gr.TabItem('语音识别'):
             voice_ui_show()
+
+        with gr.TabItem('文本分类'):
+            text_cls_show()
 
         with gr.TabItem('默认配置'):
             config_ui_show(demo)
