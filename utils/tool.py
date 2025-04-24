@@ -6,6 +6,7 @@ import ollama
 import hashlib
 import pandas as pd
 import pickle as pkl
+import yaml
 
 def singleton(cls):
     instances = {}
@@ -24,6 +25,19 @@ def load_html_file(filepath):
     with open(filepath, "r", encoding="utf-8") as file:
         html_content = file.read()
     return html_content
+
+def read_yaml(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = yaml.safe_load(file)
+            return data
+    except FileNotFoundError:
+        print(f"错误: 文件 {file_path} 未找到。")
+    except yaml.YAMLError as e:
+        print(f"错误: 解析 YAML 文件时出错: {e}")
+    except Exception as e:
+        print(f"错误: 发生未知错误: {e}")
+    return None
 
 def add_hash(match):
     '''添加hash'''

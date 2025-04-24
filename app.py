@@ -30,5 +30,5 @@ demo.launch(
     server_name='0.0.0.0',
     auth=[('a', "a"), ('b', 'b'), ('pandas', '123')],
     server_port=7680,
-    allowed_paths=[r'D:\video']
+    allowed_paths=[r'D:\video',r'C:\use\code\RapidOcr_small\data\tmp']
 )
