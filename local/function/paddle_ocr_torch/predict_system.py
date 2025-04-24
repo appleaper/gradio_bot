@@ -179,6 +179,8 @@ def imgs_sys_predict(img_path, model_name):
     args.det_model_path = config['sys'][model_name].get('det_model_path', args.det_model_path)
     args.rec_image_shape = config['sys'][model_name].get('rec_image_shape', args.rec_image_shape)
     args.rec_model_path = config['sys'][model_name].get('rec_model_path', args.rec_model_path)
+    args.det_yaml_path = config['sys'][model_name].get('det_yaml_path', args.det_yaml_path)
+    args.rec_yaml_path = config['sys'][model_name].get('rec_yaml_path', args.rec_yaml_path)
 
     text_sys = TextSystem(args)
     is_visualize = True
@@ -199,12 +201,19 @@ def imgs_sys_predict(img_path, model_name):
         elapse = time.time() - starttime
         print("Predict time of %s: %.3fs" % (image_file, elapse))
 
-        info = {}
-        for text, score in rec_res:
+
+        for index, (text, score) in enumerate(rec_res):
+            info = {}
             info['text'] = text
             info['score'] = score
+            box = dt_boxes[index]
+
+            info['x1y1'] = box[0]
+            info['x2y1'] = box[1]
+            info['x2y2'] = box[2]
+            info['x1y2'] = box[3]
             res_info_list.append(info)
-            print("{}, {:.3f}".format(text, score))
+            # print("{}, {:.3f}".format(text, score))
 
         if is_visualize:
             image = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
@@ -226,8 +235,8 @@ def imgs_sys_predict(img_path, model_name):
                 draw_img[:, :, ::-1])
             save_path = os.path.join(draw_img_save, os.path.basename(image_file))
             res_img_list.append(save_path)
-            print("The visualized image saved in {}".format(
-                os.path.join(draw_img_save, os.path.basename(image_file))))
+            # print("The visualized image saved in {}".format(
+            #     os.path.join(draw_img_save, os.path.basename(image_file))))
     return pd.DataFrame(res_info_list), res_img_list[0], []
 
 if __name__ == '__main__':

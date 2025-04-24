@@ -1,5 +1,13 @@
 
 det:
+  ch_ptocr_v3_det_infer:
+    det_model_path: C:\use\model\ocr\pt_models\ch_ptocr_v3_det_infer.pth
+  ch_ptocr_v4_det_infer:
+    det_model_path: C:\use\model\ocr\pt_models\ch_ptocr_v4_det_infer.pth
+    det_yaml_path: C:\use\code\RapidOcr_small\local\function\paddle_ocr_torch\configs\det\ch_PP-OCRv4\ch_PP-OCRv4_det_student.yml
+  ch_ptocr_v4_det_server_infer:
+    det_model_path: C:\use\model\ocr\pt_models\ch_ptocr_v4_det_server_infer.pth
+    det_yaml_path: C:\use\code\RapidOcr_small\local\function\paddle_ocr_torch\configs\det\ch_PP-OCRv4\ch_PP-OCRv4_det_teacher.yml
   multilingual_ptocr_v3_det_infer:
     det_model_path: C:\use\model\ocr\pt_models\Multilingual_v2.5\multilingual_ptocr_v3_det_infer.pth
     det_yaml_path: C:\use\code\RapidOcr_small\local\function\paddle_ocr_torch\configs\det\det_ppocr_v3.yml
@@ -42,3 +50,9 @@ sys:
     det_model_path: C:\use\model\ocr\pt_models\ch_ptocr_v3_det_infer.pth
     rec_image_shape: 3,48,320
     rec_model_path: C:\use\model\ocr\pt_models\ch_ptocr_v3_rec_infer.pth
+  method_two:
+    det_model_path: C:\use\model\ocr\pt_models\ch_ptocr_v4_det_infer.pth
+    det_yaml_path: C:\use\code\RapidOcr_small\local\function\paddle_ocr_torch\configs\det\ch_PP-OCRv4\ch_PP-OCRv4_det_student.yml
+    rec_image_shape: 3,48,320
+    rec_model_path: C:\use\model\ocr\pt_models\ch_ptocr_v4_rec_infer.pth
+    rec_yaml_path: C:\use\code\RapidOcr_small\local\function\paddle_ocr_torch\configs\rec\PP-OCRv4\ch_PP-OCRv4_rec.yml

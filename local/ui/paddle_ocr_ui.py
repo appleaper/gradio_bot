@@ -52,6 +52,7 @@ def paddle_ocr_show():
             with gr.Row():
                 det_result = gr.Image()
 
+
         det_button.click(
             imgs_det_predict,
             inputs=[det_img_path, det_model_type],
@@ -74,6 +75,7 @@ def paddle_ocr_show():
                 rec_button = gr.Button(value='开始检测')
             with gr.Row():
                 rec_text_result = gr.Textbox()
+
         rec_button.click(
             fn=imgs_rec_predict,
             inputs=[rec_img_path, rec_model_type],
@@ -99,6 +101,8 @@ def paddle_ocr_show():
             with gr.Row():
                 sys_df_result = gr.DataFrame()
 
+
+
         sys_button.click(
             fn=imgs_sys_predict,
             inputs=[sys_img_path, sys_model_type],
@@ -116,4 +120,4 @@ if __name__ == '__main__':
     '''
     with gr.Blocks() as demo:
         paddle_ocr_show()
-    demo.launch(allowed_paths=[r'C:\use\code\RapidOcr_small\data\tmp'])
+    demo.launch(allowed_paths=[r'C:\use\code\RapidOcr_small\data\tmp', r'C:\use\code\PaddleOCR2Pytorch-main\doc'])
