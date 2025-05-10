@@ -1,11 +1,5 @@
 import os.path
 import gradio as gr
-from local.rag.parse.image_parse import standalone_image_analysis
-from local.function.doclayout_yolo.analysis_of_plate_surface import psa_analysis
-from local.function.paddle_ocr_torch.predict_cls import imgs_cls_predict
-from local.function.paddle_ocr_torch.predict_det import imgs_det_predict
-from local.function.paddle_ocr_torch.predict_rec import imgs_rec_predict
-from local.function.paddle_ocr_torch.predict_system import imgs_sys_predict
 from utils.tool import read_yaml
 
 from client.llm_ocr_client import analyze_images_client, psa_analysis_client, imgs_cls_predict_client, text_detection_client, text_recognition_client
