@@ -1,0 +1,16 @@
+from flask import Flask
+from server.rag.parse.llm_ocr_server import analyze_images_route
+from server.function.doclayout_yolo.analysis_of_plate_surface_server import psa_analysis_route
+from server.function.paddle_ocr_torch.predict_cls_server import direction_judgment_route
+from server.function.paddle_ocr_torch.predict_det_server import text_detection_route
+from server.function.paddle_ocr_torch.predict_rec_server import text_recognition_route
+
+app = Flask(__name__)
+app.register_blueprint(analyze_images_route)
+app.register_blueprint(psa_analysis_route)
+app.register_blueprint(direction_judgment_route)
+app.register_blueprint(text_detection_route)
+app.register_blueprint(text_recognition_route)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=4500)

@@ -18,12 +18,11 @@ with gr.Blocks() as demo:
         with gr.TabItem('语音识别'):
             voice_ui_show()
 
-        with gr.TabItem('文本分类'):
+        with gr.TabItem('bert文本分类'):
             text_cls_show()
 
         with gr.TabItem('默认配置'):
             config_ui_show(demo)
-
 
 # demo.launch(server_name='0.0.0.0')
 demo.launch(
