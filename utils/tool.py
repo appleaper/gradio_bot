@@ -266,6 +266,25 @@ def chunk_str(title, content, user_id, article_id, index, emb_model_name, databa
     info['hash_check'] = hashlib.sha256((hash_content).encode('utf-8')).hexdigest()
     return info
 
+def read_text_file(file_path):
+    """读取文本文件内容并返回字符串"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.readlines()
+            return content
+    except FileNotFoundError:
+        print(f"错误：文件 '{file_path}' 不存在")
+        return None
+    except PermissionError:
+        print(f"错误：没有权限读取文件 '{file_path}'")
+        return None
+    except UnicodeDecodeError:
+        print(f"错误：文件 '{file_path}' 不是有效的UTF-8编码")
+        return None
+    except Exception as e:
+        print(f"未知错误：{e}")
+        return None
+
 if __name__ == '__main__':
     csv_path = '/home/pandas/snap/code/RapidOcr/database_data/rag/data_csv/中国历代政治得失分块版.csv.csv'
     book_path = './中国历代政治得失分块版.md'

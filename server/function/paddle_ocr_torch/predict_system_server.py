@@ -13,12 +13,12 @@ import copy
 import numpy as np
 import time
 from PIL import Image
-import local.function.paddle_ocr_torch.pytorchocr_utility as utility
-import local.function.paddle_ocr_torch.predict_rec as predict_rec
-import local.function.paddle_ocr_torch.predict_det as predict_det
-import local.function.paddle_ocr_torch.predict_cls as predict_cls
+import server.function.paddle_ocr_torch.pytorchocr_utility as utility
+import server.function.paddle_ocr_torch.predict_rec_server as predict_rec
+import server.function.paddle_ocr_torch.predict_det_server as predict_det
+import server.function.paddle_ocr_torch.predict_cls_server as predict_cls
 from pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
-from local.function.paddle_ocr_torch.pytorchocr_utility import draw_ocr_box_txt
+from server.function.paddle_ocr_torch.pytorchocr_utility import draw_ocr_box_txt
 from utils.tool import read_yaml
 from flask import request, jsonify, Blueprint
 

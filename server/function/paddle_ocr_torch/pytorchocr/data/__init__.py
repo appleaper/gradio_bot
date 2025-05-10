@@ -18,7 +18,7 @@ import copy
 # from paddle.io import Dataset, DataLoader, BatchSampler, DistributedBatchSampler
 # import paddle.distributed as dist
 
-from local.function.paddle_ocr_torch.pytorchocr.data.imaug import transform, create_operators
+from server.function.paddle_ocr_torch.pytorchocr.data.imaug import transform, create_operators
 # from pytorchocr.data.simple_dataset import SimpleDataSet
 # from pytorchocr.data.lmdb_dataset import LMDBDateSet
 

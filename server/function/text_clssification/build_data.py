@@ -13,8 +13,8 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from utils.tool import save_json_file, read_json_file
 from sklearn.model_selection import train_test_split
-from local.function.text_clssification.pytorch_pretrained.bert import BertModel, BertTokenizer, BertAdam
-
+from server.function.text_clssification.pytorch_pretrained.bert import BertModel, BertTokenizer, BertAdam
+from flask import request, jsonify, Blueprint
 
 PAD, CLS = '[PAD]', '[CLS]'  # padding符号, bert中综合信息符号
 
@@ -87,11 +87,11 @@ class TextClassBert():
         self.tokenizer = BertTokenizer.from_pretrained(self.bert_path)
         self.batch_size = batch_size
         self.learning_rate = 5e-5
-        self.num_epochs = num_epochs
+        self.num_epochs = int(num_epochs)
         self.model_name = 'bert'
         self.require_improvement = 15
         self.save_dir = save_dir
-        self.pad_size = 512
+        self.pad_size = 30
         self.save_path = os.path.join(save_dir, self.model_name + '.ckpt')
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.hidden_size = 768
@@ -244,8 +244,6 @@ class TextClassBert():
 
     def train(self, model, train_iter, dev_iter, test_iter, progress=gr.Progress()):
         start_time = time.time()
-
-        progress(0, desc="Starting...")
         model.train()
         param_optimizer = list(model.named_parameters())
         no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
@@ -264,15 +262,14 @@ class TextClassBert():
         model.train()
         gr.Info('开始训练')
         info_list = []
-        for epoch in progress.tqdm(range(self.num_epochs)):
-            print('Epoch [{}/{}]'.format(epoch + 1, self.num_epochs))
-            for i, (trains, labels) in enumerate(train_iter):
+
+        for epoch in range(self.num_epochs):
+            for i, (trains, labels) in enumerate(tqdm(train_iter)):
                 outputs = model(trains)
                 model.zero_grad()
                 loss = F.cross_entropy(outputs, labels)
                 loss.backward()
                 optimizer.step()
-                # if total_batch % 50 == 0 and total_batch != 0:
 
             if epoch % 5 == 0:
                 # 每多少轮输出在训练集和验证集上的效果
@@ -408,6 +405,43 @@ def predict(model_dir, save_dir, ask_str):
             '置信度': score
         }
         return info
+
+text_cls_train_route = Blueprint('text_cls_train', __name__)
+@text_cls_train_route.route('/text_cls_train', methods=['POST'])
+def text_recognition():
+    # try:
+    data = request.get_json()
+    data_path = data.get('data_path')
+    model_dir = data.get('model_dir')
+    batch_size = data.get('batch_size')
+    num_epochs = data.get('num_epochs')
+    save_dir = data.get('save_dir')
+
+    train_info = train(data_path, model_dir, batch_size, num_epochs, save_dir)
+    train_info_json = train_info.to_json(orient='records', force_ascii=False)
+    return jsonify({
+        "train_info": train_info_json,
+        'error': ''
+    }), 200
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 500
+
+text_cls_predict_route = Blueprint('text_cls_predict', __name__)
+@text_cls_predict_route.route('/text_cls_predict', methods=['POST'])
+def text_recognition():
+    try:
+        data = request.get_json()
+        model_dir = data.get('model_dir')
+        save_dir = data.get('save_dir')
+        pre_input_text = data.get('pre_input_text')
+
+        pre_result = predict(model_dir, save_dir, pre_input_text)
+        return jsonify({
+            "pre_result": pre_result,
+            'error': ''
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     # text_class = TextClassBert()

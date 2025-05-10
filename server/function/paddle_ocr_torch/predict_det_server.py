@@ -10,11 +10,11 @@ import numpy as np
 import time
 import json
 import torch
-from local.function.paddle_ocr_torch.pytorchocr.base_ocr_v20 import BaseOCRV20
-import local.function.paddle_ocr_torch.pytorchocr_utility as utility
-from local.function.paddle_ocr_torch.pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
-from local.function.paddle_ocr_torch.pytorchocr.data import create_operators, transform
-from local.function.paddle_ocr_torch.pytorchocr.postprocess import build_post_process
+from server.function.paddle_ocr_torch.pytorchocr.base_ocr_v20 import BaseOCRV20
+import server.function.paddle_ocr_torch.pytorchocr_utility as utility
+from server.function.paddle_ocr_torch.pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
+from server.function.paddle_ocr_torch.pytorchocr.data import create_operators, transform
+from server.function.paddle_ocr_torch.pytorchocr.postprocess import build_post_process
 from utils.tool import read_yaml
 from flask import request, jsonify, Blueprint
 

@@ -4,10 +4,10 @@ import torch.nn as nn
 # import torch.nn.functional as F
 # from pytorchocr.modeling.common import Activation
 
-from local.function.paddle_ocr_torch.pytorchocr.modeling.transforms import build_transform
-from local.function.paddle_ocr_torch.pytorchocr.modeling.backbones import build_backbone
-from local.function.paddle_ocr_torch.pytorchocr.modeling.necks import build_neck
-from local.function.paddle_ocr_torch.pytorchocr.modeling.heads import build_head
+from server.function.paddle_ocr_torch.pytorchocr.modeling.transforms import build_transform
+from server.function.paddle_ocr_torch.pytorchocr.modeling.backbones import build_backbone
+from server.function.paddle_ocr_torch.pytorchocr.modeling.necks import build_neck
+from server.function.paddle_ocr_torch.pytorchocr.modeling.heads import build_head
 
 class BaseModel(nn.Module):
     def __init__(self, config, **kwargs):

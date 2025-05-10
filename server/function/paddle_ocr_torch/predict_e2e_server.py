@@ -15,7 +15,7 @@ import sys
 
 import torch
 from pytorchocr.base_ocr_v20 import BaseOCRV20
-import local.function.paddle_ocr_torch.pytorchocr_utility as utility
+import server.function.paddle_ocr_torch.pytorchocr_utility as utility
 from pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
 from pytorchocr.data import create_operators, transform
 from pytorchocr.postprocess import build_post_process

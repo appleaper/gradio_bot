@@ -4,7 +4,8 @@ import gradio as gr
 import pandas as pd
 from PIL import Image
 
-from local.function.text_clssification.build_data import train,predict
+from server.function.text_clssification.build_data import train,predict
+from client.text_cls_client import text_cls_train_client
 
 def test(path):
     df = pd.read_csv(path, encoding='utf-8')
@@ -50,7 +51,7 @@ def text_cls_show():
 
 
     train_button.click(
-        train,
+        text_cls_train_client,
         inputs=[data_path, model_dir, batch_size, num_epochs, save_dir],
         outputs=[train_info]
     ).then(

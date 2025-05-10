@@ -15,7 +15,7 @@ from torch import nn
 from torch.optim import Optimizer
 from torch.nn.utils import clip_grad_norm_
 from torch.optim.optimizer import required
-from local.function.text_clssification.pytorch_pretrained.file_utils import _is_punctuation, whitespace_tokenize, _is_control, _is_whitespace, load_vocab, cached_path
+from server.function.text_clssification.pytorch_pretrained.file_utils import _is_punctuation, whitespace_tokenize, _is_control, _is_whitespace, load_vocab, cached_path
 
 VOCAB_NAME = 'vocab.txt'
 CONFIG_NAME = "config.json"

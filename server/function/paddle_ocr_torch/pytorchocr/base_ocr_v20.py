@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 import torch
 
-from local.function.paddle_ocr_torch.pytorchocr.modeling.architectures.base_model import BaseModel
+from server.function.paddle_ocr_torch.pytorchocr.modeling.architectures.base_model import BaseModel
 
 class BaseOCRV20:
     def __init__(self, config, **kwargs):
