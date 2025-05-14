@@ -4,9 +4,11 @@ from utils.tool import singleton
 from utils.plot_data import create_pie_chart
 from utils.config_init import conf_class
 from local.rag.deal_rag import DealRag, DealChat
+from client.deal_rag_client import DealRagClient
 
 rag_class = DealRag()
 chat_class = DealChat()
+client_class = DealRagClient()
 
 @singleton
 class UiDataDeal():
@@ -241,7 +243,7 @@ def chat_ui_show(demo):
     gpu_button.click(create_pie_chart, inputs=config_info, outputs=gpu_plot)
 
     rag_delete_button.click(
-        rag_class.delete_article,
+        client_class.delete_article_client,
         inputs=[rag_database_type, rag_embedding_type, rag_checkboxgroup, config_info],
         outputs=[
             rag_checkboxgroup, book_type,

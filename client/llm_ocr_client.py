@@ -1,4 +1,5 @@
 import requests
+import pandas as pd
 global_port = '4500'
 global_ip = '127.0.0.1'
 
@@ -23,7 +24,7 @@ def psa_analysis_client(psa_img_path, psa_model_path):
         "psa_model_path": psa_model_path
     }
 
-    response = requests.post(f'http://{global_ip}:{global_port}/psa_analysis', json=data)
+    response = requests.post(f'http://{global_ip}:{global_port}/psa_analysis_server', json=data)
     print(response)
     json_dict = response.json()
     save_path = json_dict['save_path']
@@ -71,6 +72,6 @@ def small_model_text_recognition_client(sys_img_path, sys_model_type):
     response = requests.post(f'http://{global_ip}:{global_port}/small_model_text_recognition', json=data)
     print(response)
     json_dict = response.json()
-    sys_df_result = json_dict['sys_df_result']
+    sys_df_result = pd.read_json(json_dict['sys_df_result'])
     sys_img_result = json_dict['sys_img_result']
     return sys_df_result, sys_img_result

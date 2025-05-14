@@ -2,10 +2,10 @@ import os.path
 import gradio as gr
 from utils.tool import read_yaml
 
-from client.llm_ocr_client import analyze_images_client, psa_analysis_client, imgs_cls_predict_client, text_detection_client, text_recognition_client
+from client.llm_ocr_client import analyze_images_client, psa_analysis_client, imgs_cls_predict_client, text_detection_client, text_recognition_client, small_model_text_recognition_client
 
 
-config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'function', 'paddle_ocr_torch', 'model.yaml')
+config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'server', 'function', 'paddle_ocr_torch', 'model.yaml')
 conf = read_yaml(config_path)
 det_model_list = list(conf['det'].keys())
 rec_model_list = list(conf['rec'].keys())
@@ -139,7 +139,7 @@ def ocr_ui_show():
 
 
         sys_button.click(
-            fn=imgs_sys_predict,
+            fn=small_model_text_recognition_client,
             inputs=[sys_img_path, sys_model_type],
             outputs=[sys_df_result, sys_img_result]
         )

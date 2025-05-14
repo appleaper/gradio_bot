@@ -603,22 +603,7 @@ class DealRag():
         :return:
         '''
         config_info = self.db_class.delete_df_to_db(rag_database_type, rag_embedding_type, rag_checkboxgroup, config_info)
-        if len(rag_checkboxgroup) == 0:
-            book_type = gr.Dropdown(choices=[], label="上下文知识")
-            selectable_documents_checkbox_group = gr.CheckboxGroup(choices=[], label='可选文章', interactive=True)
-            selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=[], label='已有知识库', interactive=True)
-            search_kb_range = gr.Dropdown(choices=[], label='检索范围', interactive=True)
-            knowledge_base_info_json_table = gr.JSON(value={})
-        else:
-            article_list = list(config_info['id2article_dict'].values())
-            group_list = list(config_info['article_group_dict'].keys())
-            book_type = gr.Dropdown(choices=group_list, label="上下文知识")
-            selectable_documents_checkbox_group = gr.CheckboxGroup(choices=article_list, label='可选文章', interactive=True)
-            selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=group_list, label='已有知识库',
-                                                                         interactive=True)
-            search_kb_range = gr.Dropdown(choices=group_list, label='检索范围', interactive=True)
-            knowledge_base_info_json_table = gr.JSON(value=config_info['article_group_dict'])
-        return [], book_type, selectable_documents_checkbox_group, selectable_knowledge_bases_checkbox_group, search_kb_range, knowledge_base_info_json_table, config_info
+        return config_info
 
     def add_article(self, rag_database_type, rag_embedding_type, is_same_group, article_name, rag_upload_file, config_info):
         '''

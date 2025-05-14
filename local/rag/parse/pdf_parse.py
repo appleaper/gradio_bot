@@ -45,10 +45,7 @@ def chunk_str(
     info['hash_check'] = hashlib.sha256((hash_content).encode('utf-8')).hexdigest()
     return info
 
-
-
 def parse_pdf_do(pdf_path, user_id, database_type, embedding_class, config_info):
-
     model_path = config_info['local_model_name_path_dict']['local_stepfun-aiGOT-OCR2_0']
     emb_model_name = embedding_class.model_name
     pdf_file_name = os.path.basename(pdf_path)
@@ -82,3 +79,35 @@ def parse_pdf_do(pdf_path, user_id, database_type, embedding_class, config_info)
                 info_list.append(info)
     df = pd.DataFrame(info_list)
     return df
+
+def llm_ocr(model_dir, file_path_list):
+    project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+    tmp_dir = os.path.join(project_dir, 'data', 'tmp')
+    os.makedirs(tmp_dir, exist_ok=True)
+    save_path = os.path.join(tmp_dir, 'result.csv')
+
+    ocr_class.init_mdoel(model_dir)
+    out_list = []
+    ocr_str = ''
+
+    for index, file_path in enumerate(file_path_list):
+        info = {}
+        ocr_result = ocr_class.parse_image(file_path)
+        filename = os.path.basename(file_path)
+        file_name, suffix = os.path.splitext(filename)
+        info['file_name'] = file_name
+        info['result'] = ocr_result
+        out_list.append(info)
+        if index == 0:
+            ocr_str += ocr_result
+
+    df = pd.DataFrame(out_list)
+    df.to_csv(save_path, encoding='utf-8', index=False)
+    ocr_class.unload_model()
+    return ocr_str, save_path, file_path_list
+
+if __name__ == '__main__':
+    model_dir = r'C:\use\model\stepfun-aiGOT-OCR2_0'
+    file_path_list = [r'C:\Users\APP\Desktop\gradio_bot\academic.jpg']
+    ocr_str, save_path, file_path_list = llm_ocr(model_dir, file_path_list)
+    print(ocr_str)
