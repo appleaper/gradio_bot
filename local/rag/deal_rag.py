@@ -620,11 +620,7 @@ class DealRag():
         is_same_group = is_same_group == '是'
         parser_info_list = self.parse_class.parse_many_files(rag_upload_file, rag_database_type, rag_embedding_type, config_info)
         config_info = self.db_class.save_df_to_db(rag_database_type, rag_embedding_type, parser_info_list, is_same_group, article_name, config_info)
-        article_list = list(config_info['id2article_dict'].values())
-        rag_checkboxgroup = gr.CheckboxGroup(choices=article_list, label="rag列表", interactive=True)
-        selectable_documents_checkbox_group = gr.CheckboxGroup(choices=article_list, label='可选文章', interactive=True)
-        config_json = gr.JSON(value=config_info,visible=False)
-        return rag_checkboxgroup, selectable_documents_checkbox_group, '', '', [], config_json
+        return config_info
 
     def update_group_info(self, info, user, embed_type, kb_name, docs):
         if user not in info:
@@ -669,13 +665,7 @@ class DealRag():
 
         group_info_json = self.update_group_info(group_info_json, username, kb_embedding_type, new_kb_name_textbox, selectable_documents_checkbox_group)
         save_json_file(group_info_json, article_group_path)
-        article_list = group_info_json[username][kb_embedding_type].keys()
-        config_info['article_group_dict'] = group_info_json
-
-        selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=article_list, label='已有知识库', interactive=True)
-        book_type = gr.Dropdown(choices=article_list, label="上下文知识")
-        search_kb_range = gr.Dropdown(choices=article_list, label='检索范围', interactive=True)
-        return selectable_knowledge_bases_checkbox_group, group_info_json[username][kb_embedding_type], book_type, search_kb_range, [], '', [], config_info
+        return group_info_json, username
 
     def delete_article_group(self, db_type, embed_type, sel_kb_checkbox_grp, config_info):
         '''
@@ -692,12 +682,8 @@ class DealRag():
 
         group_info_json = self.delete_group_entries(group_info_json, username, embed_type, sel_kb_checkbox_grp)
         save_json_file(group_info_json, article_group_path)
-        article_list = list(group_info_json[username][embed_type].keys())
-        config_info['article_group_dict'] = group_info_json
-        sel_kb_chk_grp = gr.CheckboxGroup(choices=article_list, label='已有知识库', interactive=True)
-        book_type = gr.Dropdown(choices=article_list, label="上下文知识")
-        search_kb_range = gr.Dropdown(choices=article_list, label='检索范围', interactive=True)
-        return sel_kb_chk_grp, group_info_json[username][embed_type], book_type, search_kb_range, config_info
+        return group_info_json, username
+
 
     def select_article_group(self, search_database_type, search_embedding_type, search_kb_range, search_tok_k, search_text, config_info):
         '''

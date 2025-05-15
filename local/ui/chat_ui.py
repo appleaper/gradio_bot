@@ -257,26 +257,26 @@ def chat_ui_show(demo):
     )
 
     rag_submit_files_button.click(
-        rag_class.add_article,
+        client_class.add_article_client,
         inputs=[rag_database_type, rag_embedding_type, is_same_group, knowledge_name, rag_upload_file, config_info],
         outputs=[rag_checkboxgroup, selectable_documents_checkbox_group, is_same_group, knowledge_name, rag_upload_file, config_info]
     )
 
     create_kb_group_button.click(
-        rag_class.add_article_group,
+        client_class.add_article_group_client,
         inputs=[kb_database_type, kb_embedding_type, selectable_documents_checkbox_group, new_kb_name_textbox, config_info],
         outputs=[selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table, book_type, search_kb_range, selectable_documents_checkbox_group, new_kb_name_textbox, selectable_knowledge_bases_checkbox_group, config_info]
     )
 
     delete_kb_button.click(
-        rag_class.delete_article_group,
+        client_class.delete_article_group_client,
         inputs=[kb_database_type, kb_embedding_type, selectable_knowledge_bases_checkbox_group, config_info],
         outputs=[selectable_knowledge_bases_checkbox_group, knowledge_base_info_json_table, book_type, search_kb_range, config_info]
     )
 
     gr.on(
         triggers=[search_text.submit, search_button.click],
-        fn=rag_class.select_article_group,
+        fn=client_class.select_article_group,
         inputs=[search_database_type, search_embedding_type, search_kb_range, search_tok_k, search_text, config_info],
         outputs=[search_show, config_info]
     )
