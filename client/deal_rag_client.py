@@ -29,25 +29,28 @@ class DealRagClient():
             'config_info': config_info
         }
         response = requests.post(f'http://{global_ip}:{global_port}/delete_article', json=data)
-        print(response)
         json_dict = response.json()
-        config_info = json_dict['config_info']
-        if len(rag_checkboxgroup) == 0:
-            book_type = gr.Dropdown(choices=[], label="上下文知识")
-            selectable_documents_checkbox_group = gr.CheckboxGroup(choices=[], label='可选文章', interactive=True)
-            selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=[], label='已有知识库', interactive=True)
-            search_kb_range = gr.Dropdown(choices=[], label='检索范围', interactive=True)
-            knowledge_base_info_json_table = gr.JSON(value={})
+        error = json_dict['error']
+        if error=='':
+            config_info = json_dict['config_info']
+            if len(rag_checkboxgroup) == 0:
+                book_type = gr.Dropdown(choices=[], label="上下文知识")
+                selectable_documents_checkbox_group = gr.CheckboxGroup(choices=[], label='可选文章', interactive=True)
+                selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=[], label='已有知识库', interactive=True)
+                search_kb_range = gr.Dropdown(choices=[], label='检索范围', interactive=True)
+                knowledge_base_info_json_table = gr.JSON(value={})
+            else:
+                article_list = list(config_info['id2article_dict'].values())
+                group_list = list(config_info['article_group_dict'].keys())
+                book_type = gr.Dropdown(choices=group_list, label="上下文知识")
+                selectable_documents_checkbox_group = gr.CheckboxGroup(choices=article_list, label='可选文章', interactive=True)
+                selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=group_list, label='已有知识库',
+                                                                             interactive=True)
+                search_kb_range = gr.Dropdown(choices=group_list, label='检索范围', interactive=True)
+                knowledge_base_info_json_table = gr.JSON(value=config_info['article_group_dict'])
+            return [], book_type, selectable_documents_checkbox_group, selectable_knowledge_bases_checkbox_group, search_kb_range, knowledge_base_info_json_table, config_info
         else:
-            article_list = list(config_info['id2article_dict'].values())
-            group_list = list(config_info['article_group_dict'].keys())
-            book_type = gr.Dropdown(choices=group_list, label="上下文知识")
-            selectable_documents_checkbox_group = gr.CheckboxGroup(choices=article_list, label='可选文章', interactive=True)
-            selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=group_list, label='已有知识库',
-                                                                         interactive=True)
-            search_kb_range = gr.Dropdown(choices=group_list, label='检索范围', interactive=True)
-            knowledge_base_info_json_table = gr.JSON(value=config_info['article_group_dict'])
-        return [], book_type, selectable_documents_checkbox_group, selectable_knowledge_bases_checkbox_group, search_kb_range, knowledge_base_info_json_table, config_info
+            gr.Info(error)
 
     def add_article_client(
             self,
@@ -68,13 +71,16 @@ class DealRagClient():
         }
         response = requests.post(f'http://{global_ip}:{global_port}/add_article', json=data)
         json_dict = response.json()
-        config_info = json_dict['config_info']
-
-        article_list = list(config_info['id2article_dict'].values())
-        rag_checkboxgroup = gr.CheckboxGroup(choices=article_list, label="rag列表", interactive=True)
-        selectable_documents_checkbox_group = gr.CheckboxGroup(choices=article_list, label='可选文章', interactive=True)
-        config_json = gr.JSON(value=config_info,visible=False)
-        return rag_checkboxgroup, selectable_documents_checkbox_group, '', '', [], config_json
+        error = json_dict['error']
+        if error == '':
+            config_info = json_dict['config_info']
+            article_list = list(config_info['id2article_dict'].values())
+            rag_checkboxgroup = gr.CheckboxGroup(choices=article_list, label="rag列表", interactive=True)
+            selectable_documents_checkbox_group = gr.CheckboxGroup(choices=article_list, label='可选文章', interactive=True)
+            config_json = gr.JSON(value=config_info,visible=False)
+            return rag_checkboxgroup, selectable_documents_checkbox_group, '', '', [], config_json
+        else:
+            gr.Info(error)
 
     def add_article_group_client(
             self,
@@ -93,17 +99,21 @@ class DealRagClient():
         }
         response = requests.post(f'http://{global_ip}:{global_port}/add_article_group', json=data)
         json_dict = response.json()
-        group_info_json = json_dict['group_info_json']
-        username = json_dict['username']
-        article_list = group_info_json[username][kb_embedding_type].keys()
-        config_info['article_group_dict'] = group_info_json
+        error = json_dict['error']
+        if error == '':
+            group_info_json = json_dict['group_info_json']
+            username = json_dict['username']
+            article_list = group_info_json[username][kb_embedding_type].keys()
+            config_info['article_group_dict'] = group_info_json
 
-        selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=article_list, label='已有知识库',
-                                                                     interactive=True)
-        book_type = gr.Dropdown(choices=article_list, label="上下文知识")
-        search_kb_range = gr.Dropdown(choices=article_list, label='检索范围', interactive=True)
-        return selectable_knowledge_bases_checkbox_group, group_info_json[username][
-            kb_embedding_type], book_type, search_kb_range, [], '', [], config_info
+            selectable_knowledge_bases_checkbox_group = gr.CheckboxGroup(choices=article_list, label='已有知识库',
+                                                                         interactive=True)
+            book_type = gr.Dropdown(choices=article_list, label="上下文知识")
+            search_kb_range = gr.Dropdown(choices=article_list, label='检索范围', interactive=True)
+            return selectable_knowledge_bases_checkbox_group, group_info_json[username][
+                kb_embedding_type], book_type, search_kb_range, [], '', [], config_info
+        else:
+            gr.Info(error)
 
 
     def delete_article_group_client(
@@ -122,15 +132,19 @@ class DealRagClient():
         }
         response = requests.post(f'http://{global_ip}:{global_port}/delete_article_group', json=data)
         json_dict = response.json()
-        group_info_json = json_dict['group_info_json']
-        username = json_dict['username']
+        error = json_dict['error']
+        if error == '':
+            group_info_json = json_dict['group_info_json']
+            username = json_dict['username']
 
-        article_list = list(group_info_json[username][kb_embedding_type].keys())
-        config_info['article_group_dict'] = group_info_json
-        sel_kb_chk_grp = gr.CheckboxGroup(choices=article_list, label='已有知识库', interactive=True)
-        book_type = gr.Dropdown(choices=article_list, label="上下文知识")
-        search_kb_range = gr.Dropdown(choices=article_list, label='检索范围', interactive=True)
-        return sel_kb_chk_grp, group_info_json[username][kb_embedding_type], book_type, search_kb_range, config_info
+            article_list = list(group_info_json[username][kb_embedding_type].keys())
+            config_info['article_group_dict'] = group_info_json
+            sel_kb_chk_grp = gr.CheckboxGroup(choices=article_list, label='已有知识库', interactive=True)
+            book_type = gr.Dropdown(choices=article_list, label="上下文知识")
+            search_kb_range = gr.Dropdown(choices=article_list, label='检索范围', interactive=True)
+            return sel_kb_chk_grp, group_info_json[username][kb_embedding_type], book_type, search_kb_range, config_info
+        else:
+            gr.Info(error)
 
     def select_article_group(
             self,
@@ -151,7 +165,11 @@ class DealRagClient():
         }
         response = requests.post(f'http://{global_ip}:{global_port}/select_article_group', json=data)
         json_dict = response.json()
-        df_json = json_dict['df_json']
-        config_info = json_dict['config_info']
-        df = pd.DataFrame(json.loads(df_json))
-        return df, config_info
+        error = json_dict['error']
+        if error == '':
+            df_json = json_dict['df_json']
+            config_info = json_dict['config_info']
+            df = pd.DataFrame(json.loads(df_json))
+            return df, config_info
+        else:
+            gr.Info(error)

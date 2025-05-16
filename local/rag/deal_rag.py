@@ -270,7 +270,13 @@ class DealDataToDB():
             config_info = self.save_df_to_es(rag_embedding_type, info_list, is_same_group, article_name, config_info)
         return config_info
 
-    def delete_df_to_lancedb(self, rag_database_type, rag_embedding_type, rag_checkboxgroup, config_info):
+    def delete_df_to_lancedb(
+            self,
+            rag_database_type:str,
+            rag_embedding_type:str,
+            rag_checkboxgroup:list,
+            config_info:dict
+    ):
         '''从lancedb中删除数据'''
         data_dir = config_info[rag_database_type]['data_dir']
         id2article_path = config_info[rag_database_type]['id2article']
@@ -433,7 +439,13 @@ class DealDataToDB():
         config_info['article_group_dict'] = group_articles_dict_copy
         return config_info
 
-    def delete_df_to_db(self, rag_database_type, rag_embedding_type, rag_checkboxgroup, config_info):
+    def delete_df_to_db(
+            self,
+            rag_database_type:str,
+            rag_embedding_type:str,
+            rag_checkboxgroup:list,
+            config_info:dict
+    ):
         if rag_database_type == 'lancedb':
             config_info = self.delete_df_to_lancedb(rag_database_type, rag_embedding_type, rag_checkboxgroup, config_info)
         elif rag_database_type == 'milvus':
@@ -593,7 +605,13 @@ class DealRag():
         self.parse_class = ParseFileType()
         self.db_class = DealDataToDB()
 
-    def delete_article(self, rag_database_type, rag_embedding_type, rag_checkboxgroup, config_info):
+    def delete_article(
+            self,
+            rag_database_type:str,
+            rag_embedding_type:str,
+            rag_checkboxgroup:list,
+            config_info:dict
+    ):
         '''
         删除文章
         :param rag_database_type: 数据库

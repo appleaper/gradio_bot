@@ -22,7 +22,8 @@ def analyze_images():
             "empty_list": [],
             "ocr_str": ocr_str,
             "save_path": save_path,
-            "first_file_path": file_path_list[0]
+            "first_file_path": file_path_list[0],
+            'error': ''
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -20,7 +20,8 @@ def text_recognition():
 
         config_info = rag_class.delete_article(rag_database_type, rag_embedding_type, rag_checkboxgroup, config_info)
         return jsonify({
-            "config_info": config_info
+            "config_info": config_info,
+            'error': ''
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -43,7 +44,8 @@ def text_recognition():
         config_info = data.get('config_info')
         config_info = rag_class.add_article(rag_database_type, rag_embedding_type, is_same_group, knowledge_name, rag_upload_file, config_info)
         return jsonify({
-            "config_info": config_info
+            "config_info": config_info,
+            'error': ''
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -66,7 +68,8 @@ def add_article_group():
         group_info_json, username = rag_class.add_article_group(kb_database_type, kb_embedding_type, selectable_documents_checkbox_group, new_kb_name_textbox, config_info)
         return jsonify({
             "group_info_json": group_info_json,
-            'username': username
+            'username': username,
+            'error': ''
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -88,7 +91,8 @@ def delete_article_group():
         group_info_json, username = rag_class.delete_article_group(kb_database_type, kb_embedding_type, selectable_knowledge_bases_checkbox_group, config_info)
         return jsonify({
             "group_info_json": group_info_json,
-            'username': username
+            'username': username,
+            'error': ''
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -115,7 +119,8 @@ def select_article_group():
         df_json = df.to_json(orient='records', force_ascii=False)
         return jsonify({
             "df_json": df_json,
-            'config_info': config_info
+            'config_info': config_info,
+            'error': ''
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

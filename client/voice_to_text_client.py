@@ -1,4 +1,5 @@
 import json
+import gradio as gr
 import pandas as pd
 import requests
 
@@ -13,7 +14,10 @@ def stand_alone_speech_client(speech_recognition_file, model_dir):
     response = requests.post(f'http://{global_ip}:{global_port}/stand_alone_speech', json=data)
     print(response)
     json_dict = response.json()
-    speech_recognition_output_text = json_dict['speech_recognition_output_text']
-    speech_recognition_file = json_dict['speech_recognition_file']
     error = json_dict['error']
-    return speech_recognition_output_text, speech_recognition_file
+    if error == '':
+        speech_recognition_output_text = json_dict['speech_recognition_output_text']
+        speech_recognition_file = json_dict['speech_recognition_file']
+        return speech_recognition_output_text, speech_recognition_file
+    else:
+        gr.Info(error)

@@ -5,7 +5,7 @@ from utils.tool import read_yaml
 from client.llm_ocr_client import analyze_images_client, psa_analysis_client, imgs_cls_predict_client, text_detection_client, text_recognition_client, small_model_text_recognition_client
 
 
-config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'server', 'function', 'paddle_ocr_torch', 'model.yaml')
+config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'local', 'function', 'paddle_ocr_torch', 'model.yaml')
 conf = read_yaml(config_path)
 det_model_list = list(conf['det'].keys())
 rec_model_list = list(conf['rec'].keys())
